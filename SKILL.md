@@ -134,7 +134,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
 7. **Check Playwright MCP availability**:
    - Try to detect if `mcp__playwright__browser_navigate` is available
    - If NOT available, inform user:
-     "Playwright MCP is niet geinstalleerd. Dit is nodig voor browser tests (3 van de 13 quality agents). Wil je dat ik het installeer?"
+     "Playwright MCP is not installed. This is required for browser tests (3 of the 13 quality agents). Would you like me to install it?"
    - If user confirms: add Playwright MCP to `~/.claude/settings.json`
    - If user declines: continue in code-only mode (document in config)
 
@@ -445,7 +445,7 @@ SUMMARY: [one sentence]
 
 ## Layer 4: Quality Gate (`/vibecoat-guard quality`)
 
-**When:** AFTER a feature implementation is complete. This MUST activate automatically when the word "done", "klaar", "finished", "ready", or "af" is used in the context of a feature. This also replaces the vibe-check skill — do NOT run vibe-check separately.
+**When:** AFTER a feature implementation is complete. This MUST activate automatically when the word "done", "finished", "ready", or "complete" is used in the context of a feature. This also replaces the vibe-check skill — do NOT run vibe-check separately.
 
 ### Prerequisites
 

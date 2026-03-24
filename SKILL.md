@@ -114,7 +114,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    - Number of function/method definitions
    - Number of exported symbols
 
-5. **Detect build and test commands**:
+6. **Detect build and test commands**:
    ```
    package.json scripts.build    → npm run build
    package.json scripts.test     → npm test / npx vitest run
@@ -124,21 +124,21 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    Cargo.toml                    → cargo test
    ```
 
-6. **Detect app URL** (for web projects):
+7. **Detect app URL** (for web projects):
    ```
    vite.config: server.port      → http://localhost:{port}
    next.config / package.json    → http://localhost:3000
    .env: PORT=                   → http://localhost:{PORT}
    ```
 
-7. **Check Playwright MCP availability**:
-   - Try to detect if `mcp__playwright__browser_navigate` is available
+8. **Check Playwright MCP availability**:
+   - Try to detect if a Playwright MCP `browser_navigate` tool is available (tool name varies by installation, e.g. `mcp__playwright__browser_navigate` or `mcp__plugin_playwright_playwright__browser_navigate`)
    - If NOT available, inform user:
      "Playwright MCP is not installed. This is required for browser tests (3 of the 13 quality agents). Would you like me to install it?"
    - If user confirms: add Playwright MCP to `~/.claude/settings.json`
    - If user declines: continue in code-only mode (document in config)
 
-8. **Write configuration files**:
+9. **Write configuration files**:
 
    `.vibecoat-guard/config.json`:
    ```json
@@ -179,7 +179,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    }
    ```
 
-9. **Install pre-commit hook** (ask permission first):
+10. **Install pre-commit hook** (ask permission first):
    Append to `.git/hooks/pre-commit` (create if not exists, make executable):
    ```bash
    # --- regression-guard marker check ---
@@ -209,7 +209,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    # --- end regression-guard ---
    ```
 
-10. **Configure Claude Code hooks** (ask permission first):
+11. **Configure Claude Code hooks** (ask permission first):
     Add to `.claude/settings.json`:
     ```json
     {
@@ -227,7 +227,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
     }
     ```
 
-11. **Report init results** to user with summary of detected hotspots, markers, and configuration.
+12. **Report init results** to user with summary of detected hotspots, markers, and configuration.
 
 ---
 
@@ -368,9 +368,9 @@ You are a visual regression tester. Use Playwright MCP to verify the application
 [Include content of .vibecoat-guard/regression-checklist.json if exists]
 
 ## Steps
-1. Navigate to the app URL using mcp__playwright__browser_navigate
-2. Take a screenshot of the main page using mcp__playwright__browser_take_screenshot
-3. Get accessibility snapshot using mcp__playwright__browser_snapshot
+1. Navigate to the app URL using Playwright's browser_navigate tool
+2. Take a screenshot of the main page using Playwright's browser_take_screenshot tool
+3. Get accessibility snapshot using Playwright's browser_snapshot tool
 4. For each key page/route in the checklist:
    a. Navigate to the page
    b. Take screenshot
@@ -406,7 +406,7 @@ You are a functional regression tester. Use Playwright MCP to verify the applica
 [Include content of .vibecoat-guard/regression-checklist.json if exists]
 
 ## Steps
-1. Navigate to app URL using mcp__playwright__browser_navigate
+1. Navigate to app URL using Playwright's browser_navigate tool
 2. Test navigation: click through all major navigation items, verify pages load
 3. Test keyboard shortcuts: Escape, Cmd+K, Tab navigation
 4. Test interactive elements: buttons, toggles, dropdowns, forms
@@ -524,13 +524,13 @@ Test these scenarios:
 5. Persistence — changes survive page reload
 6. Navigation — back/forward browser buttons work correctly
 
-Use these tools:
-- mcp__playwright__browser_navigate — Navigate to URL
-- mcp__playwright__browser_click — Click elements
-- mcp__playwright__browser_type — Type in inputs
-- mcp__playwright__browser_snapshot — Get accessibility snapshot
-- mcp__playwright__browser_take_screenshot — Capture screenshot
-- mcp__playwright__browser_wait_for — Wait for elements
+Use the Playwright MCP tools available in your environment (tool names vary by installation, look for tools containing "playwright" and "browser_"):
+- browser_navigate — Navigate to URL
+- browser_click — Click elements
+- browser_type — Type in inputs
+- browser_snapshot — Get accessibility snapshot
+- browser_take_screenshot — Capture screenshot
+- browser_wait_for — Wait for elements
 ```
 Without Playwright: Score capped at 7/10 maximum. Review code for test coverage instead.
 
@@ -551,10 +551,10 @@ Without Playwright: Score capped at 7/10. Review CSS/styling code instead.
 **7. Responsive Agent** *(requires Playwright MCP)*
 Additional instructions:
 ```
-You MUST use Playwright MCP with viewport resizing:
-1. mcp__playwright__browser_resize width=375 height=812 — Mobile
-2. mcp__playwright__browser_resize width=768 height=1024 — Tablet
-3. mcp__playwright__browser_resize width=1280 height=800 — Desktop
+You MUST use Playwright MCP with viewport resizing (use the browser_resize tool):
+1. Resize to width=375 height=812 — Mobile
+2. Resize to width=768 height=1024 — Tablet
+3. Resize to width=1280 height=800 — Desktop
 Take screenshots at each size. Check: touch targets (min 44px), text readability, no horizontal scroll, proper breakpoints, navigation adaptation.
 ```
 Without Playwright: Score capped at 7/10. Review responsive CSS/media queries instead.

@@ -1,0 +1,1 @@
+# vibecoat-guard

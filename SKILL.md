@@ -23,6 +23,7 @@ Each layer is calibrated to its frequency. Frequent checks are instant; rare che
 | **Pre-commit hook** | At commit time | ~35s | Build + tests + marker check. Catches compile/test failures. |
 | **Regression suite** | After a phase | ~2 min | 3 parallel agents: structural + visual + functional. |
 | **Quality gate** | After feature done | ~5-10 min | 13 parallel agents, iterative 10/10 convergence. |
+| **Dashboard** | On demand | ~3-5s | Reads history, generates HTML. No agents dispatched. |
 
 **Key principle:** Verify does NOT duplicate the pre-commit hook. Build+test only runs once (at commit). Verify is purely string matching — it never blocks your flow.
 
@@ -51,6 +52,7 @@ Each layer is calibrated to its frequency. Frequent checks are instant; rare che
 | `/vibecoat-guard quality` | 13-agent quality gate (10/10 loop) |
 | `/vibecoat-guard full` | verify → regression → quality pipeline |
 | `/vibecoat-guard report` | Show last run results |
+| `/vibecoat-guard dashboard` | Generate and open Command Center dashboard |
 
 ---
 
@@ -150,6 +152,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
      "appUrl": "http://localhost:3000",
      "playwrightAvailable": true,
      "hotspotThreshold": 5,
+     "dashboard": false,
      "lastInit": "2026-03-22T18:00:00Z"
    }
    ```
@@ -179,7 +182,16 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    }
    ```
 
-10. **Install pre-commit hook** (ask permission first):
+10. **Ask about Command Center Dashboard:**
+    Ask user: "Enable Command Center dashboard? This saves run history and generates a visual dashboard you can open in your browser. (y/n)"
+    If yes:
+    - Set `"dashboard": true` in config.json
+    - Create `.vibecoat-guard/history/` directory
+    - Add `.vibecoat-guard/dashboard.html` to `.gitignore`
+    If no:
+    - Set `"dashboard": false` in config.json (default)
+
+11. **Install pre-commit hook** (ask permission first):
    Append to `.git/hooks/pre-commit` (create if not exists, make executable):
    ```bash
    # --- regression-guard marker check ---
@@ -209,7 +221,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    # --- end regression-guard ---
    ```
 
-11. **Configure Claude Code hooks** (ask permission first):
+12. **Configure Claude Code hooks** (ask permission first):
     Add to `.claude/settings.json`:
     ```json
     {
@@ -227,7 +239,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
     }
     ```
 
-12. **Report init results** to user with summary of detected hotspots, markers, and configuration.
+13. **Report init results** to user with summary of detected hotspots, markers, and configuration.
 
 ---
 
@@ -258,6 +270,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    - Conflicts on hotspot files → "CONFLICT detected. Recommend sequential execution for agents touching: [files]"
    - Conflicts on non-hotspot files → "Low-risk conflict. Parallel OK but verify after each agent"
 5. **Take baseline snapshot** of hotspot file counts (imports, cases, etc.) and save to `.vibecoat-guard/last-run.json`
+6. **Save history record** (if `dashboard: true` in config): Write a history record to `.vibecoat-guard/history/{YYYYMMDD-HHmmss}.json` with `run.type: "pre-flight"`, the conflict matrix, planned agents, and git context from `git rev-parse HEAD` and `git branch --show-current`.
 
 ---
 
@@ -305,6 +318,7 @@ Run this ONCE per project. It bootstraps all configuration automatically.
    ```
 
 5. **If FAIL**: Do NOT proceed with next agent or phase. Fix regressions first, then re-run verify.
+6. **Save history record** (if `dashboard: true` in config): Write a history record to `.vibecoat-guard/history/{YYYYMMDD-HHmmss}.json` with `run.type: "verify"`, marker check results, count changes, and git context.
 
 **NOTE: Build + test is NOT part of verify.** The pre-commit hook handles build+test at commit time. Verify is intentionally fast (~100ms) so it doesn't slow down the development flow. The layers are designed to avoid redundant work:
 - **Verify** = instant marker check (after every agent)
@@ -435,6 +449,7 @@ SUMMARY: [one sentence]
    - Functional: PASS (8 flows tested, all passing)
    ```
 5. **If ANY agent reports FAIL**: List specific regressions and fix before proceeding.
+6. **Save history record** (if `dashboard: true` in config): Write a history record to `.vibecoat-guard/history/{YYYYMMDD-HHmmss}.json` with `run.type: "regression"`, all three agent results (structural, visual, functional) including scores, durations, and specific findings, plus git context.
 
 ### For non-web projects (no Playwright):
 - Only Agent 1 (Structural) runs
@@ -660,6 +675,37 @@ Write results to `.vibecoat-guard/last-run.json`:
 }
 ```
 
+### Track Resolved Issues
+
+When an issue from a previous iteration no longer appears in the current iteration, move it to a `resolvedIssues` array with the iteration it was resolved in. This creates the resolution audit trail:
+```json
+{
+  "agent": "security",
+  "severity": "HIGH",
+  "location": "src/auth.tsx:42",
+  "issue": "Missing input validation",
+  "fix": "Added Zod schema validation",
+  "resolvedInIteration": 2
+}
+```
+
+### Save History Record (if dashboard enabled)
+
+If `dashboard: true` in config, write a comprehensive history record to `.vibecoat-guard/history/{YYYYMMDD-HHmmss}.json` containing:
+- `run.type: "quality"`, trigger, timestamp, duration, result
+- `git`: branch, commitHash, author, changedFiles
+- `quality`: all iteration scores, resolvedIssues, acceptedExceptions, stagnationEvents
+- `summary`: regressionsBlocked, issuesFound, issuesFixed, healthScore (calculated)
+
+Health score calculation:
+```
+healthScore = weighted average of:
+  - Latest quality gate average score (40%)
+  - Marker integrity rate over last 10 runs (25%)
+  - Regression block rate (20%)
+  - Fix velocity: avg iterations to reach 10/10 (15%)
+```
+
 ---
 
 ## Layer 5: File Integrity (Pre-Commit Hook)
@@ -667,6 +713,17 @@ Write results to `.vibecoat-guard/last-run.json`:
 **When:** Automatically at every `git commit`. No user action needed.
 
 The pre-commit hook installed during init checks all manifest markers. If any marker is missing from any hotspot file, the commit is BLOCKED with a clear error message showing exactly which markers are missing and in which files.
+
+### Hook Result Tracking (if dashboard enabled)
+
+The hook writes a lightweight flag file after each run:
+```bash
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)|pass" > .vibecoat-guard/last-hook-result.txt
+# or on failure:
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)|fail" > .vibecoat-guard/last-hook-result.txt
+```
+
+The next skill invocation (verify, regression, or quality) checks for this file, converts it to a proper history record in `.vibecoat-guard/history/`, and deletes the flag file. This keeps the hook fast while still capturing data.
 
 ---
 
@@ -685,6 +742,206 @@ The pre-commit hook installed during init checks all manifest markers. If any ma
    - Manifest status: X hotspot files, Y markers tracked
    - Score trends: improving/stable/degrading per agent
    - Recommendations: what to focus on next
+
+---
+
+## Layer 7: Command Center Dashboard (`/vibecoat-guard dashboard`)
+
+**When:** Manually invoked. Generates a single static HTML dashboard from run history. This is an **opt-in add-on** — all other layers work normally without it.
+
+### Prerequisites
+
+- `"dashboard": true` in `.vibecoat-guard/config.json` (set during init)
+- At least one history record in `.vibecoat-guard/history/`
+
+### Steps
+
+1. **Check config**: Read `config.json`. If `dashboard` is not `true`, ask user if they want to enable it.
+2. **Check for hook results**: If `.vibecoat-guard/last-hook-result.txt` exists, convert it to a history record and delete the flag file.
+3. **Read all history**: Glob `.vibecoat-guard/history/*.json`, read and parse each file into an array.
+4. **No history?** Generate a "Getting Started" dashboard showing config status and instructions. Open and return.
+5. **Prune old records**: Keep only the last 200 records. Delete files older than the cutoff from the history directory.
+6. **Read current state**: Read `config.json` and `feature-manifest.json`.
+7. **Calculate derived metrics** from the raw history data:
+   - Total regressions prevented (sum of `summary.regressionsBlocked`)
+   - Per-agent score averages and trends (last 5 quality runs)
+   - Hotspot risk scores (commit frequency × regression rate)
+   - Health score trend (last 5 runs)
+   - Convergence velocity (average iterations to reach 10/10)
+   - Issue resolution rate (resolved / total)
+   - Technical debt age (days since each accepted exception)
+8. **Generate HTML**: Write `.vibecoat-guard/dashboard.html` following the specifications below.
+9. **Open**: `open .vibecoat-guard/dashboard.html` (macOS) or `xdg-open .vibecoat-guard/dashboard.html` (Linux).
+
+### History Record Schema
+
+Each history file in `.vibecoat-guard/history/{YYYYMMDD-HHmmss}.json` follows this structure:
+
+```json
+{
+  "id": "20260324-143022",
+  "run": {
+    "type": "verify | pre-flight | regression | quality | pre-commit-hook | full",
+    "trigger": "auto | manual",
+    "timestamp": "2026-03-24T14:30:22Z",
+    "durationMs": 4832,
+    "result": "pass | fail"
+  },
+  "git": {
+    "branch": "feature/sidebar",
+    "commitHash": "a1b2c3d",
+    "author": "mike",
+    "changedFiles": ["src/Sidebar.tsx"]
+  },
+  "summary": {
+    "regressionsBlocked": 0,
+    "issuesFound": 0,
+    "issuesFixed": 0,
+    "healthScore": 95
+  }
+}
+```
+
+Type-specific fields (null when not applicable):
+- **verify**: `markersChecked`, `markersPresent`, `markersMissing[]`, `countChanges[]`
+- **pre-flight**: `agentsPlanned`, `conflicts[]`, `recommendation`
+- **regression**: `structural`, `visual`, `functional` agent results with scores and durations
+- **quality**: `iteration`, `totalIterations`, `scores` (13 agents), `iterationHistory[]`, `resolvedIssues[]`, `acceptedExceptions[]`, `stagnationEvents[]`
+- **pre-commit-hook**: `buildResult`, `testResult`, `markerCheckResult`, `missingMarkers[]`
+
+### HTML Generation Specifications
+
+Generate a single self-contained HTML file with all CSS and JS inline.
+
+**External dependency**: Chart.js 4.x via CDN only:
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+```
+
+**Data embedding**:
+```html
+<script>window.__GUARD_DATA__ = { runs: [...], manifest: {...}, config: {...}, computed: {...} };</script>
+```
+
+### Design System
+
+**Dark theme (primary)**:
+```css
+:root {
+  --bg-root: #0a0a0f;
+  --bg-surface: #12121a;
+  --bg-elevated: #1a1a26;
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b8;
+  --text-muted: #6b6b80;
+  --accent-primary: #6366f1;
+  --score-critical: #ef4444;   /* 0-3 */
+  --score-warning: #f59e0b;    /* 4-6 */
+  --score-good: #3b82f6;       /* 7-9 */
+  --score-perfect: #10b981;    /* 10 */
+  --border-default: rgba(255, 255, 255, 0.06);
+  --radius-md: 10px;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+}
+```
+
+**Light theme** via `[data-theme="light"]`: flip backgrounds to white/gray, text to dark. Score/accent colors stay the same.
+
+**13 agent chart colors** (full hue wheel for dark+light):
+`#6366f1` Architecture, `#8b5cf6` Code Quality, `#ef4444` Security, `#f59e0b` Functional, `#10b981` UX, `#ec4899` Visual Design, `#06b6d4` Responsive, `#3b82f6` Accessibility, `#14b8a6` Copy, `#f97316` Branding, `#a78bfa` i18n, `#22d3ee` Performance, `#84cc16` Business Analyst.
+
+**Typography**: System font stack (`-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif`). Monospace: `ui-monospace, 'SF Mono', Menlo, monospace`. Hero stat: 64px/700. Card stat: 28px/700. Title: 20px/700. Section: 16px/600. Body: 14px/400. Label: 11px/500 uppercase.
+
+**Components**:
+- **Card**: `background: var(--bg-surface)`, `border: 1px solid var(--border-default)`, `border-radius: var(--radius-md)`, `padding: 20px`. On hover: `translateY(-1px)`, border glow, shadow.
+- **Health Ring**: SVG circle (160px hero, 64px card), `stroke-dasharray` animated on load (1s ease-out), color by score range, pulsing glow.
+- **Score Badge**: Pill shape (`border-radius: 9999px`), 22px height, score-color background, white bold text.
+- **Heatmap Cell**: 40px square, color by score, `scale(1.15)` on hover.
+- **Status Dot**: 8px circle with glow shadow.
+- **Tab**: 13px, muted color, 2px bottom border on active in accent-primary.
+
+**Micro-interactions**:
+- Tab switch: `fadeSlideIn` (opacity 0→1, translateX 8px→0, 200ms)
+- Stat numbers: count-up via `requestAnimationFrame` (600ms)
+- Theme toggle: icon rotates 180° (350ms)
+- Charts: lazy-initialized when tab becomes active, destroyed+recreated on theme toggle
+
+### Navigation Structure
+
+Horizontal tab bar with logical groupings separated by dividers:
+
+```
+[Overview] [Timeline]  |  [Agents] [Issues] [Shield]  |  [Hotspots] [Debt]  |  [Performance] [Git]
+ ── STATUS ──────────     ── QUALITY ─────────────────    ── RISK ───────────    ── SYSTEM ────────
+```
+
+Header bar above tabs: Left = "VIBECOAT GUARD — COMMAND CENTER" with shield icon. Right = theme toggle (sun/moon), last run timestamp, health badge.
+
+### Dashboard Sections
+
+**1. Overview** (hero page, sparse + impactful):
+- Health Ring (160px, centered): overall score + trend arrow + delta
+- 4 KPI stat cards: Total Runs, Issues Found, Shield Blocks, Avg Agent Score — each with sparkline
+- 2-column row: Line chart (score trend, last 20 runs) + Doughnut chart (issue severity distribution)
+- 2-column row: Recent Runs table (last 5) + Recent Shield events (last 5)
+
+**2. Timeline** (run history):
+- Filter bar: run type toggle (all/verify/regression/quality)
+- 2-column: Vertical timeline (40%, dots color-coded by result, connected by line) + Selected run detail panel (60%, metadata + agent scores as horizontal bar chart)
+
+**3. Agents** (13-agent scorecards):
+- Radar chart: all 13 agents on axes, latest scores
+- Agent grid (3-4 columns): 13 cards, each showing score (large, color-coded), trend (last 5 scores as mini heatmap row), status dot, last issue count
+- Heatmap table: rows = last 10 quality runs, columns = 13 agents, cells = score color-coded. Shows patterns.
+
+**4. Issues** (resolution log):
+- Filter bar: severity, status (open/resolved/accepted), agent, text search
+- 4 stat cards: Total Open, Critical Count, Avg Resolution Time, Resolution Rate %
+- Full-width data table: severity badge, agent, file, issue description, status dot, run #, date. Expandable rows for fix details. Recurring issues flagged as "systemic".
+
+**5. Shield** (regressions prevented — celebratory):
+- Hero stat: large counter "X Regressions Prevented" with shield icon
+- Area chart: cumulative regressions prevented over time
+- Cards grid (3 columns): per prevention event (date, type, file, severity, "Saved" badge)
+- Bar chart: preventions by category (marker, count, visual, functional)
+
+**6. Hotspots** (risk map):
+- Ranked file list sorted by risk (commit frequency × regression rate): file name, commits, markers, risk badge, last modified. Click to expand marker list.
+- Bar chart: changes per file over time
+
+**7. Debt** (technical debt ledger):
+- Debt score ring (circular indicator)
+- Stacked area chart: debt by category over time
+- Data table: category, description, file, severity, age (days), status. Items >30 days get "Overdue Review" badge.
+- Pie chart: debt distribution by category
+
+**8. Performance** (run metrics):
+- 4 KPI cards: Avg Duration, Fastest Run, Slowest Run, Total Time Saved
+- Stacked bar chart: run duration by layer (verify, regression, quality)
+- Line chart: duration trend over time
+- Table: last 20 runs with timing breakdown per layer
+
+**9. Git** (branch context):
+- Current branch card with last commit info
+- Bar chart: commits per day (last 30 days)
+- Stacked bar: hotspot file changes
+- Pre-commit hook status card (installed, last block, total blocks)
+
+### Responsive Breakpoints
+
+- `>=1200px`: Full layout as designed
+- `768px-1199px`: 2-column grids, KPI cards wrap to 2 per row
+- `<768px`: Single column, tabs become horizontally scrollable, charts full-width
+
+### Security Rules
+
+- Sanitize ALL string data before embedding (escape HTML entities in issue descriptions, file paths, etc.)
+- Do NOT embed absolute file system paths, secrets, API keys, or authentication tokens
+- Add CSP meta tag: `<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net;">`
+- No dynamic code execution patterns in the generated HTML
+- Target file size: under 500KB (hard limit: 2MB)
 
 ---
 
@@ -735,6 +992,8 @@ Playwright available:     All 6 layers fully operational
 Without Playwright:       Layers 1-3 structural only + Layer 4 code-only (10 agents, browser agents max 7/10)
 No .vibecoat-guard/:    Run /vibecoat-guard init first (skill will prompt)
 No git repo:              Layers 2-5 disabled (no diff, no commits). Only Layer 4 quality gate works.
+Dashboard disabled:       All layers work normally, no history saved. Enable with /vibecoat-guard init.
+No history yet:           Dashboard shows "Getting Started" view with setup status.
 ```
 
 ## Quick Reference
@@ -747,6 +1006,7 @@ No git repo:              Layers 2-5 disabled (no diff, no commits). Only Layer 
 /vibecoat-guard quality     → After feature done (13 agents, 10/10)
 /vibecoat-guard full        → verify + regression + quality
 /vibecoat-guard report      → Show status
+/vibecoat-guard dashboard   → Generate + open Command Center
 
 Automatic:
 - Pre-commit hook blocks missing markers

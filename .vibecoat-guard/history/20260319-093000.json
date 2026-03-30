@@ -1,0 +1,58 @@
+{
+  "id": "20260319-093000",
+  "run": {
+    "type": "preCommitHook",
+    "trigger": "auto",
+    "timestamp": "2026-03-19T09:30:00.000Z",
+    "durationMs": 5620,
+    "result": "fail"
+  },
+  "git": {
+    "branch": "feature/form-validation",
+    "commitHash": "a7b8c9d0e1f2a3b4c5d6e7f8901234567890abcd",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/FormField.tsx",
+      "src/components/FormValidator.tsx",
+      "src/hooks/useForm.ts"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 1,
+    "issuesFound": 2,
+    "issuesFixed": 0,
+    "healthScore": 58
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": null,
+  "quality": null,
+  "preCommitHook": {
+    "steps": [
+      {
+        "name": "build",
+        "result": "pass",
+        "durationMs": 2800,
+        "output": "Build completed successfully. 0 errors, 0 warnings."
+      },
+      {
+        "name": "test",
+        "result": "pass",
+        "durationMs": 1450,
+        "output": "42 tests passed, 0 failed, 0 skipped."
+      },
+      {
+        "name": "marker-verify",
+        "result": "fail",
+        "durationMs": 1370,
+        "output": "2 markers missing in changed files",
+        "missingMarkers": [
+          { "id": "VCG-FORM-FIELD-002", "file": "src/components/FormField.tsx", "line": 23, "description": "Error message display marker removed when refactoring validation feedback" },
+          { "id": "VCG-FORM-VAL-001", "file": "src/components/FormValidator.tsx", "line": 56, "description": "Validation trigger marker missing after extracting validation logic to hook" }
+        ]
+      }
+    ],
+    "blocked": true,
+    "blockReason": "Commit blocked: 2 vibecoat-guard markers missing from changed files. Restore markers before committing."
+  }
+}

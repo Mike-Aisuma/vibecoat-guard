@@ -1,0 +1,66 @@
+{
+  "id": "20260322-110000",
+  "run": {
+    "type": "regression",
+    "trigger": "auto",
+    "timestamp": "2026-03-22T11:00:00.000Z",
+    "durationMs": 9870,
+    "result": "pass"
+  },
+  "git": {
+    "branch": "feature/dashboard-charts",
+    "commitHash": "c9d0e1f2a3b4c5d6e7f8901234567890abcdef12",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/Dashboard.tsx",
+      "src/components/ChartWidget.tsx",
+      "src/components/HealthGauge.tsx",
+      "src/hooks/useDashboardData.ts"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 0,
+    "issuesFound": 0,
+    "issuesFixed": 0,
+    "healthScore": 92
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": {
+    "agents": [
+      {
+        "name": "structural-agent",
+        "result": "pass",
+        "durationMs": 2900,
+        "checks": [
+          { "name": "component-tree-integrity", "result": "pass", "details": "All dashboard component imports resolve correctly" },
+          { "name": "prop-type-consistency", "result": "pass", "details": "ChartWidget and HealthGauge props match expected types" },
+          { "name": "data-flow-integrity", "result": "pass", "details": "useDashboardData hook return type matches consumer expectations" }
+        ]
+      },
+      {
+        "name": "visual-agent",
+        "result": "pass",
+        "durationMs": 3500,
+        "checks": [
+          { "name": "layout-stability", "result": "pass", "details": "Dashboard grid layout stable across all viewports" },
+          { "name": "chart-rendering", "result": "pass", "details": "SVG chart elements render within expected bounds" },
+          { "name": "color-theme-consistency", "result": "pass", "details": "Chart colors follow design system tokens" }
+        ]
+      },
+      {
+        "name": "functional-agent",
+        "result": "pass",
+        "durationMs": 3470,
+        "checks": [
+          { "name": "data-loading", "result": "pass", "details": "Dashboard data loads and displays correctly" },
+          { "name": "chart-interactions", "result": "pass", "details": "Chart hover and click interactions work as expected" },
+          { "name": "gauge-animation", "result": "pass", "details": "HealthGauge animates smoothly from 0 to target value" }
+        ]
+      }
+    ],
+    "regressionDetails": []
+  },
+  "quality": null,
+  "preCommitHook": null
+}

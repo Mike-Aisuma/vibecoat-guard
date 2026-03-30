@@ -1,0 +1,47 @@
+{
+  "id": "20260310-091500",
+  "run": {
+    "type": "verify",
+    "trigger": "auto",
+    "timestamp": "2026-03-10T09:15:00.000Z",
+    "durationMs": 3420,
+    "result": "pass"
+  },
+  "git": {
+    "branch": "feature/sidebar-refactor",
+    "commitHash": "a3f7c2d1e8b94056fa12dc3e7890abcd12345678",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/Sidebar.tsx",
+      "src/components/SidebarItem.tsx",
+      "src/hooks/useSidebar.ts"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 0,
+    "issuesFound": 0,
+    "issuesFixed": 0,
+    "healthScore": 100
+  },
+  "verify": {
+    "totalMarkers": 57,
+    "foundMarkers": 57,
+    "missingMarkers": [],
+    "fileResults": [
+      { "file": "src/components/Sidebar.tsx", "markers": 12, "found": 12, "missing": [] },
+      { "file": "src/components/SidebarItem.tsx", "markers": 8, "found": 8, "missing": [] },
+      { "file": "src/components/Header.tsx", "markers": 6, "found": 6, "missing": [] },
+      { "file": "src/components/Footer.tsx", "markers": 4, "found": 4, "missing": [] },
+      { "file": "src/components/Button.tsx", "markers": 5, "found": 5, "missing": [] },
+      { "file": "src/components/Modal.tsx", "markers": 7, "found": 7, "missing": [] },
+      { "file": "src/components/Card.tsx", "markers": 3, "found": 3, "missing": [] },
+      { "file": "src/hooks/useSidebar.ts", "markers": 4, "found": 4, "missing": [] },
+      { "file": "src/hooks/useTheme.ts", "markers": 3, "found": 3, "missing": [] },
+      { "file": "src/utils/cssParser.ts", "markers": 5, "found": 5, "missing": [] }
+    ]
+  },
+  "preFlight": null,
+  "regression": null,
+  "quality": null,
+  "preCommitHook": null
+}

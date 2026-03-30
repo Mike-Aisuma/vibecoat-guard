@@ -1,0 +1,50 @@
+{
+  "id": "20260312-100000",
+  "run": {
+    "type": "preFlight",
+    "trigger": "auto",
+    "timestamp": "2026-03-12T10:00:00.000Z",
+    "durationMs": 1850,
+    "result": "fail"
+  },
+  "git": {
+    "branch": "feature/routing-overhaul",
+    "commitHash": "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f678901234",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/Router.tsx",
+      "src/routes/index.ts",
+      "src/pages/Dashboard.tsx"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 1,
+    "issuesFound": 1,
+    "issuesFixed": 0,
+    "healthScore": 68
+  },
+  "verify": null,
+  "preFlight": {
+    "agentsPlanned": 3,
+    "agents": [
+      { "name": "structural-agent", "status": "ready", "targetFiles": ["src/components/Router.tsx", "src/routes/index.ts"] },
+      { "name": "visual-agent", "status": "ready", "targetFiles": ["src/pages/Dashboard.tsx"] },
+      { "name": "functional-agent", "status": "ready", "targetFiles": ["src/components/Router.tsx", "src/pages/Dashboard.tsx"] }
+    ],
+    "conflicts": [
+      {
+        "file": "src/components/Router.tsx",
+        "type": "concurrent-modification",
+        "agents": ["structural-agent", "functional-agent"],
+        "description": "Both structural-agent and functional-agent target Router.tsx for modifications. Risk of conflicting route structure changes.",
+        "resolution": "sequential-execution",
+        "priority": "structural-agent"
+      }
+    ],
+    "estimatedDurationMs": 35000,
+    "safeToParallelize": false
+  },
+  "regression": null,
+  "quality": null,
+  "preCommitHook": null
+}

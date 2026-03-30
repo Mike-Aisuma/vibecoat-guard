@@ -1,0 +1,79 @@
+{
+  "id": "20260320-155000",
+  "run": {
+    "type": "quality",
+    "trigger": "manual",
+    "timestamp": "2026-03-20T15:50:00.000Z",
+    "durationMs": 29800,
+    "result": "pass"
+  },
+  "git": {
+    "branch": "feature/dashboard-charts",
+    "commitHash": "b8c9d0e1f2a3b4c5d6e7f890123456789abcdef0",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/Dashboard.tsx",
+      "src/components/ChartWidget.tsx",
+      "src/components/HealthGauge.tsx"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 0,
+    "issuesFound": 3,
+    "issuesFixed": 3,
+    "healthScore": 88
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": null,
+  "quality": {
+    "totalIterations": 3,
+    "maxIterations": 10,
+    "converged": true,
+    "finalScores": {
+      "accessibility": 9,
+      "responsiveness": 10,
+      "colorContrast": 9,
+      "typography": 9,
+      "spacing": 10,
+      "componentStructure": 10,
+      "stateManagement": 9,
+      "errorHandling": 8,
+      "performance": 9,
+      "codeQuality": 10,
+      "testCoverage": 8,
+      "documentation": 9,
+      "security": 10
+    },
+    "iterationHistory": [
+      {
+        "iteration": 1,
+        "scores": { "accessibility": 7, "responsiveness": 7, "colorContrast": 7, "typography": 7, "spacing": 8, "componentStructure": 8, "stateManagement": 7, "errorHandling": 6, "performance": 7, "codeQuality": 8, "testCoverage": 6, "documentation": 7, "security": 9 },
+        "issuesFound": 3,
+        "issuesFixed": 0,
+        "avgScore": 7.23
+      },
+      {
+        "iteration": 2,
+        "scores": { "accessibility": 8, "responsiveness": 9, "colorContrast": 8, "typography": 8, "spacing": 9, "componentStructure": 9, "stateManagement": 8, "errorHandling": 7, "performance": 8, "codeQuality": 9, "testCoverage": 7, "documentation": 8, "security": 10 },
+        "issuesFound": 1,
+        "issuesFixed": 2,
+        "avgScore": 8.31
+      },
+      {
+        "iteration": 3,
+        "scores": { "accessibility": 9, "responsiveness": 10, "colorContrast": 9, "typography": 9, "spacing": 10, "componentStructure": 10, "stateManagement": 9, "errorHandling": 8, "performance": 9, "codeQuality": 10, "testCoverage": 8, "documentation": 9, "security": 10 },
+        "issuesFound": 0,
+        "issuesFixed": 1,
+        "avgScore": 9.23
+      }
+    ],
+    "issues": [],
+    "resolvedIssues": [
+      { "id": "QI-013", "severity": "medium", "category": "accessibility", "description": "ChartWidget SVG elements missing aria-label descriptions for screen readers", "file": "src/components/ChartWidget.tsx", "line": 67, "fixedInIteration": 2 },
+      { "id": "QI-014", "severity": "medium", "category": "errorHandling", "description": "HealthGauge crashes when score value is null or undefined", "file": "src/components/HealthGauge.tsx", "line": 19, "fixedInIteration": 2 },
+      { "id": "QI-015", "severity": "low", "category": "testCoverage", "description": "Dashboard data fetching edge cases not covered in tests", "file": "src/components/Dashboard.tsx", "line": 34, "fixedInIteration": 3 }
+    ]
+  },
+  "preCommitHook": null
+}

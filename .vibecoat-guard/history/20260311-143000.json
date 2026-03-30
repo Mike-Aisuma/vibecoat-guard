@@ -1,0 +1,98 @@
+{
+  "id": "20260311-143000",
+  "run": {
+    "type": "quality",
+    "trigger": "manual",
+    "timestamp": "2026-03-11T14:30:00.000Z",
+    "durationMs": 48200,
+    "result": "fail"
+  },
+  "git": {
+    "branch": "feature/theme-editor",
+    "commitHash": "b9e4a1f3c7d8205e6ab1cd9f3456789012345678",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/ThemeEditor.tsx",
+      "src/components/ColorPicker.tsx",
+      "src/styles/theme.css",
+      "src/hooks/useTheme.ts"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 0,
+    "issuesFound": 7,
+    "issuesFixed": 0,
+    "healthScore": 52
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": null,
+  "quality": {
+    "totalIterations": 5,
+    "maxIterations": 10,
+    "converged": false,
+    "finalScores": {
+      "accessibility": 6,
+      "responsiveness": 5,
+      "colorContrast": 5,
+      "typography": 7,
+      "spacing": 6,
+      "componentStructure": 8,
+      "stateManagement": 7,
+      "errorHandling": 5,
+      "performance": 6,
+      "codeQuality": 7,
+      "testCoverage": 5,
+      "documentation": 6,
+      "security": 8
+    },
+    "iterationHistory": [
+      {
+        "iteration": 1,
+        "scores": { "accessibility": 4, "responsiveness": 3, "colorContrast": 3, "typography": 5, "spacing": 4, "componentStructure": 6, "stateManagement": 5, "errorHandling": 3, "performance": 4, "codeQuality": 5, "testCoverage": 3, "documentation": 4, "security": 7 },
+        "issuesFound": 7,
+        "issuesFixed": 0,
+        "avgScore": 4.31
+      },
+      {
+        "iteration": 2,
+        "scores": { "accessibility": 4, "responsiveness": 4, "colorContrast": 4, "typography": 5, "spacing": 5, "componentStructure": 7, "stateManagement": 5, "errorHandling": 4, "performance": 5, "codeQuality": 6, "testCoverage": 4, "documentation": 5, "security": 7 },
+        "issuesFound": 7,
+        "issuesFixed": 0,
+        "avgScore": 5.0
+      },
+      {
+        "iteration": 3,
+        "scores": { "accessibility": 5, "responsiveness": 4, "colorContrast": 4, "typography": 6, "spacing": 5, "componentStructure": 7, "stateManagement": 6, "errorHandling": 4, "performance": 5, "codeQuality": 6, "testCoverage": 4, "documentation": 5, "security": 8 },
+        "issuesFound": 7,
+        "issuesFixed": 0,
+        "avgScore": 5.31
+      },
+      {
+        "iteration": 4,
+        "scores": { "accessibility": 5, "responsiveness": 5, "colorContrast": 5, "typography": 6, "spacing": 6, "componentStructure": 7, "stateManagement": 6, "errorHandling": 5, "performance": 6, "codeQuality": 7, "testCoverage": 5, "documentation": 5, "security": 8 },
+        "issuesFound": 7,
+        "issuesFixed": 0,
+        "avgScore": 5.85
+      },
+      {
+        "iteration": 5,
+        "scores": { "accessibility": 6, "responsiveness": 5, "colorContrast": 5, "typography": 7, "spacing": 6, "componentStructure": 8, "stateManagement": 7, "errorHandling": 5, "performance": 6, "codeQuality": 7, "testCoverage": 5, "documentation": 6, "security": 8 },
+        "issuesFound": 7,
+        "issuesFixed": 0,
+        "avgScore": 6.23
+      }
+    ],
+    "issues": [
+      { "id": "QI-001", "severity": "high", "category": "accessibility", "description": "ColorPicker missing ARIA labels for color swatches", "file": "src/components/ColorPicker.tsx", "line": 45, "status": "open" },
+      { "id": "QI-002", "severity": "high", "category": "colorContrast", "description": "Theme preview text fails WCAG AA contrast ratio on light backgrounds", "file": "src/components/ThemeEditor.tsx", "line": 112, "status": "open" },
+      { "id": "QI-003", "severity": "medium", "category": "responsiveness", "description": "Color palette grid breaks on viewports below 480px", "file": "src/components/ColorPicker.tsx", "line": 78, "status": "open" },
+      { "id": "QI-004", "severity": "medium", "category": "errorHandling", "description": "No validation for malformed hex color input", "file": "src/components/ColorPicker.tsx", "line": 34, "status": "open" },
+      { "id": "QI-005", "severity": "medium", "category": "testCoverage", "description": "useTheme hook has no unit tests", "file": "src/hooks/useTheme.ts", "line": 1, "status": "open" },
+      { "id": "QI-006", "severity": "low", "category": "documentation", "description": "ThemeEditor component missing JSDoc for props interface", "file": "src/components/ThemeEditor.tsx", "line": 8, "status": "open" },
+      { "id": "QI-007", "severity": "low", "category": "responsiveness", "description": "Theme preview panel has fixed width instead of fluid layout", "file": "src/components/ThemeEditor.tsx", "line": 67, "status": "open" }
+    ],
+    "resolvedIssues": []
+  },
+  "preCommitHook": null
+}

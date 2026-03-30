@@ -1,0 +1,77 @@
+{
+  "id": "20260314-163000",
+  "run": {
+    "type": "regression",
+    "trigger": "auto",
+    "timestamp": "2026-03-14T16:30:00.000Z",
+    "durationMs": 12740,
+    "result": "fail"
+  },
+  "git": {
+    "branch": "feature/auth-refactor",
+    "commitHash": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f89012345678",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/LoginForm.tsx",
+      "src/hooks/useAuth.ts",
+      "src/services/authService.ts",
+      "src/pages/LoginPage.tsx"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 1,
+    "issuesFound": 1,
+    "issuesFixed": 0,
+    "healthScore": 45
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": {
+    "agents": [
+      {
+        "name": "structural-agent",
+        "result": "pass",
+        "durationMs": 3200,
+        "checks": [
+          { "name": "component-tree-integrity", "result": "pass", "details": "All component imports resolve correctly" },
+          { "name": "prop-type-consistency", "result": "pass", "details": "No prop type mismatches detected" },
+          { "name": "route-mapping", "result": "pass", "details": "All routes map to valid components" }
+        ]
+      },
+      {
+        "name": "visual-agent",
+        "result": "pass",
+        "durationMs": 4100,
+        "checks": [
+          { "name": "layout-stability", "result": "pass", "details": "No layout shifts detected in login page" },
+          { "name": "style-inheritance", "result": "pass", "details": "CSS custom properties chain intact" },
+          { "name": "responsive-breakpoints", "result": "pass", "details": "All breakpoints render correctly" }
+        ]
+      },
+      {
+        "name": "functional-agent",
+        "result": "fail",
+        "durationMs": 5440,
+        "checks": [
+          { "name": "form-submission", "result": "fail", "details": "Login form submit handler throws TypeError: cannot read property 'token' of undefined", "file": "src/hooks/useAuth.ts", "line": 42 },
+          { "name": "state-transitions", "result": "fail", "details": "Authentication state does not transition from 'loading' to 'authenticated' after successful API response", "file": "src/services/authService.ts", "line": 28 },
+          { "name": "error-boundaries", "result": "pass", "details": "Error boundary catches and displays auth errors correctly" }
+        ]
+      }
+    ],
+    "regressionDetails": [
+      {
+        "id": "REG-001",
+        "severity": "critical",
+        "type": "functional",
+        "description": "Login flow broken: useAuth hook destructures response.token but authService now returns response.data.accessToken after refactor",
+        "file": "src/hooks/useAuth.ts",
+        "line": 42,
+        "previouslyWorking": true,
+        "introducedIn": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f89012345678"
+      }
+    ]
+  },
+  "quality": null,
+  "preCommitHook": null
+}

@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibecoat Guard — Command Center</title>
+<style>
+:root {
+  --bg-root: #09090f;
+  --bg-surface: #151520;
+  --bg-elevated: #1f1f2c;
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b8;
+  --text-muted: #6b6b80;
+  --accent-primary: #6366f1;
+  --accent-primary-alpha: rgba(99, 102, 241, 0.15);
+  --score-critical: #ef4444;
+  --score-warning: #f59e0b;
+  --score-good: #3b82f6;
+  --score-perfect: #10b981;
+  --score-critical-alpha: rgba(239, 68, 68, 0.15);
+  --score-warning-alpha: rgba(245, 158, 11, 0.15);
+  --score-good-alpha: rgba(59, 130, 246, 0.15);
+  --score-perfect-alpha: rgba(16, 185, 129, 0.15);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+[data-theme="light"] {
+  --bg-root: #eef0f4;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f6f7f9;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.18);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --accent-primary-alpha: rgba(99, 102, 241, 0.1);
+  --score-critical-alpha: rgba(239, 68, 68, 0.08);
+  --score-warning-alpha: rgba(245, 158, 11, 0.08);
+  --score-good-alpha: rgba(59, 130, 246, 0.08);
+  --score-perfect-alpha: rgba(16, 185, 129, 0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font-sans); background: var(--bg-root); color: var(--text-primary); font-size: clamp(13px, 0.8vw + 6px, 16px); line-height: 1.5; min-height: 100vh; }
+
+/* ---- HEADER ---- */
+.header { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-logo { width: 32px; height: 32px; background: var(--accent-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.header-title { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+.header-subtitle { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.header-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.header-time { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+.theme-toggle { width: 36px; height: 36px; border-radius: 8px; background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all var(--transition-base); }
+.theme-toggle:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.theme-toggle .icon { transition: transform 350ms ease; }
+[data-theme="light"] .theme-toggle .icon { transform: rotate(180deg); }
+
+/* ---- TAB BAR ---- */
+.tab-bar { background: var(--bg-surface); border-bottom: 1px solid var(--border-default); padding: 0 32px; display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; }
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-divider { width: 1px; height: 20px; background: var(--border-default); margin: 0 8px; flex-shrink: 0; }
+.tab { padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--transition-base); white-space: nowrap; user-select: none; }
+.tab:hover { color: var(--text-secondary); }
+.tab.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); font-weight: 600; }
+
+/* ---- MAIN LAYOUT ---- */
+.main { padding: clamp(16px, 1.5vw, 32px) clamp(16px, 2vw, 48px); margin: 0 auto; }
+.page { display: none; animation: fadeSlideIn 200ms ease; }
+.page.active { display: block; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ---- CARDS ---- */
+.card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 20px; transition: border-color var(--transition-base), box-shadow var(--transition-base); }
+.card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; }
+.card-value { font-size: clamp(22px, 1.5vw + 8px, 32px); font-weight: 700; color: var(--text-primary); line-height: 1; }
+.card-trend { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.trend-up { color: var(--score-perfect); }
+.trend-down { color: var(--score-critical); }
+.trend-flat { color: var(--text-muted); }
+
+/* ---- GRIDS ---- */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+.grid-13 { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+
+/* ---- HEALTH CARD ---- */
+.health-card-inner { display: flex; align-items: flex-start; gap: 32px; }
+.health-ring-container { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.health-ring { position: relative; width: 120px; height: 120px; }
+.health-ring svg { transform: rotate(-90deg); }
+.health-ring-bg { fill: none; stroke: var(--bg-elevated); stroke-width: 8; }
+.health-ring-value { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out, stroke 0.3s ease; }
+.health-ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.health-ring-score { font-size: clamp(28px, 2vw + 8px, 40px); font-weight: 700; line-height: 1; }
+.health-ring-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.health-ring-trend { font-size: 13px; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+
+/* ---- SECTION TITLES ---- */
+.section-title { font-size: clamp(15px, 0.9vw + 6px, 20px); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; }
+.section-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4; }
+
+/* ---- BADGES ---- */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; line-height: 18px; }
+.badge-critical { background: var(--score-critical-alpha); color: var(--score-critical); }
+.badge-warning { background: var(--score-warning-alpha); color: var(--score-warning); }
+.badge-good { background: var(--score-good-alpha); color: var(--score-good); }
+.badge-perfect { background: var(--score-perfect-alpha); color: var(--score-perfect); }
+.badge-accent { background: var(--accent-primary-alpha); color: var(--accent-primary); }
+
+/* ---- TABLES ---- */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-default); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border-default); font-size: 13px; color: var(--text-secondary); }
+tr:hover td { background: var(--bg-elevated); }
+td .file { font-family: var(--font-mono); font-size: 12px; color: var(--accent-primary); }
+
+/* ---- STATUS DOTS ---- */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.status-dot.pass { background: var(--score-perfect); box-shadow: 0 0 6px var(--score-perfect); }
+.status-dot.fail { background: var(--score-critical); box-shadow: 0 0 6px var(--score-critical); }
+.status-dot.partial { background: var(--score-warning); box-shadow: 0 0 6px var(--score-warning); }
+
+/* ---- HEATMAP ---- */
+.heatmap-cell { width: 36px; height: 28px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; transition: transform var(--transition-fast); cursor: default; }
+.heatmap-cell:hover { transform: scale(1.15); }
+
+/* ---- AGENT CARDS ---- */
+.agent-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 16px; transition: border-color var(--transition-base), box-shadow var(--transition-base); }
+.agent-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+.agent-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.agent-name { font-size: 12px; font-weight: 600; }
+.agent-score { font-size: 20px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
+.agent-trend { display: flex; gap: 3px; }
+.agent-trend-dot { width: 20px; height: 6px; border-radius: 3px; }
+
+/* ---- TIMELINE ---- */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--border-default); }
+.timeline-item { position: relative; padding: 0 0 20px 20px; transition: opacity var(--transition-fast); cursor: pointer; border-radius: var(--radius-sm); }
+.timeline-item:hover .timeline-label { color: var(--accent-primary); }
+.timeline-item.active-run .timeline-label { color: var(--accent-primary); font-weight: 600; }
+.timeline-item.hidden { display: none; }
+.timeline-dot { position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg-surface); }
+.timeline-time { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+.timeline-label { font-size: 13px; font-weight: 500; }
+.timeline-detail { font-size: 12px; color: var(--text-secondary); }
+
+/* ---- SHIELD PAGE ---- */
+.shield-hero { text-align: center; padding: 40px 0; }
+.shield-icon { font-size: 48px; margin-bottom: 12px; }
+.shield-count { font-size: clamp(48px, 3vw + 16px, 72px); font-weight: 700; color: var(--score-perfect); line-height: 1; }
+.shield-label { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
+
+/* ---- HOTSPOT ---- */
+.risk-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-default); transition: background var(--transition-fast); }
+.risk-item:hover { background: var(--bg-elevated); }
+.risk-file { font-family: var(--font-mono); font-size: 13px; color: var(--accent-primary); }
+.risk-meta { font-size: 12px; color: var(--text-muted); }
+
+/* ---- CHARTS ---- */
+.chart-container { position: relative; height: 280px; }
+.chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 200px; color: var(--text-muted); }
+.chart-empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+.chart-empty-text { font-size: 14px; font-weight: 500; }
+.chart-empty-hint { font-size: 12px; margin-top: 4px; }
+
+/* ---- FILTER BAR ---- */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast); }
+.filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.filter-btn.active { background: var(--accent-primary-alpha); border-color: var(--accent-primary); color: var(--accent-primary); }
+
+/* ---- TOOLTIPS ---- */
+.info-tip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border-default); font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: help; margin-left: 6px; vertical-align: middle; flex-shrink: 0; }
+.info-tip:hover { background: var(--accent-primary-alpha); border-color: var(--accent-primary); color: var(--accent-primary); }
+.info-tip::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--bg-elevated); border: 1px solid var(--border-hover); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; font-weight: 400; color: var(--text-secondary); white-space: normal; width: 280px; text-transform: none; letter-spacing: normal; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity var(--transition-base); z-index: 1000; box-shadow: var(--shadow-md); }
+.info-tip:hover::after { opacity: 1; }
+
+/* ---- ACTIONS LIST ---- */
+.actions-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 16px 0 10px; display: flex; align-items: center; }
+.action-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-default); align-items: center; }
+.action-item:last-child { border-bottom: none; }
+.action-item .badge { min-width: 68px; text-align: center; justify-content: center; flex-shrink: 0; }
+.action-desc { font-size: 12px; color: var(--text-secondary); flex: 1; }
+.action-cmd { font-family: var(--font-mono); font-size: 11px; color: var(--accent-primary); background: var(--accent-primary-alpha); padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+.no-actions { color: var(--text-muted); font-size: 13px; padding: 16px 0; text-align: center; }
+
+/* ---- HIDDEN TABLE ROWS ---- */
+tr.hidden { display: none; }
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1199px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-13 { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .health-card-inner { flex-direction: column; }
+  .shield-cats { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 767px) {
+  .header { padding: 12px 16px; }
+  .main { padding: 16px; }
+  .tab-bar { padding: 0 16px; }
+  .grid-4, .grid-3, .grid-2, .kpi-grid { grid-template-columns: 1fr; }
+  .grid-13 { grid-template-columns: repeat(2, 1fr); }
+  .header-subtitle { display: none; }
+  .health-card-inner { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">&#x1f6e1;</div>
+    <div>
+      <div class="header-title">VIBECOAT GUARD</div>
+      <div class="header-subtitle">COMMAND CENTER</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-time">Last run: 2026-03-24 14:32</span>
+    <span class="header-badge badge-perfect">95 Health</span>
+    <button class="theme-toggle" onclick="toggleTheme()"><span class="icon">&#9790;</span></button>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <div class="tab active" data-tab="overview">Overview</div>
+  <div class="tab" data-tab="timeline">Timeline</div>
+  <div class="tab-divider"></div>
+  <div class="tab" data-tab="agents">Agents</div>
+  <div class="tab" data-tab="issues">Issues</div>
+  <div class="tab" data-tab="shield">Shield</div>
+  <div class="tab-divider"></div>
+  <div class="tab" data-tab="hotspots">Hotspots</div>
+  <div class="tab" data-tab="debt">Debt</div>
+  <div class="tab-divider"></div>
+  <div class="tab" data-tab="performance">Performance</div>
+  <div class="tab" data-tab="git">Git</div>
+</nav>
+
+<main class="main">
+
+  <!-- ===================== OVERVIEW PAGE ===================== -->
+  <div class="page active" id="page-overview">
+
+    <!-- Health Score + Actions row -->
+    <div class="grid-2" style="margin-bottom:16px; grid-template-columns: auto 1fr;">
+      <!-- Health Score Card -->
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;min-width:200px;">
+        <div class="card-title" style="align-self:flex-start;">
+          Health Score
+          <span class="info-tip" data-tooltip="Composite score (0-100) based on quality gate scores (40%), marker integrity (25%), regressions blocked (20%), and fix velocity (15%).">?</span>
+        </div>
+        <div class="health-ring-container" style="padding:12px 0 4px;">
+          <div class="health-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="health-ring-bg" cx="60" cy="60" r="50"></circle>
+              <circle class="health-ring-value" cx="60" cy="60" r="50" stroke="var(--score-perfect)" stroke-dasharray="314.16" stroke-dashoffset="15.7"></circle>
+            </svg>
+            <div class="health-ring-center">
+              <div class="health-ring-score">95</div>
+              <div class="health-ring-label">/ 100</div>
+            </div>
+          </div>
+          <div class="health-ring-trend trend-up">&#9650; +3 from last week</div>
+        </div>
+      </div>
+      <!-- Actions Card -->
+      <div class="card">
+        <div class="card-title">
+          Actions to reach 100%
+          <span class="info-tip" data-tooltip="Fix these issues and re-run /vibecoat-guard quality to see your score improve. Items are sorted by impact on your health score.">?</span>
+        </div>
+        <div class="action-item">
+          <span class="badge badge-critical">CRITICAL</span>
+          <span class="action-desc">Fix input validation on login endpoint (<span style="font-family:var(--font-mono);font-size:11px">src/auth.ts:42</span>)</span>
+          <span class="action-cmd">/vibecoat-guard quality</span>
+        </div>
+        <div class="action-item">
+          <span class="badge badge-warning">HIGH</span>
+          <span class="action-desc">Add ARIA labels to Sidebar navigation (<span style="font-family:var(--font-mono);font-size:11px">src/Sidebar.tsx:88</span>)</span>
+          <span class="action-cmd">/vibecoat-guard quality</span>
+        </div>
+        <div class="action-item">
+          <span class="badge badge-good">MEDIUM</span>
+          <span class="action-desc">Replace hardcoded string "Settings" with i18n key (<span style="font-family:var(--font-mono);font-size:11px">src/Dashboard.tsx:15</span>)</span>
+          <span class="action-cmd">/vibecoat-guard quality</span>
+        </div>
+        <div class="action-item">
+          <span class="badge badge-warning">HIGH</span>
+          <span class="action-desc">Resolve performance stagnation in Dashboard.tsx (score stuck at 8)</span>
+          <span class="action-cmd">/vibecoat-guard quality</span>
+        </div>
+        <div class="action-item">
+          <span class="badge badge-accent">LOW</span>
+          <span class="action-desc">Update legacy logo in Footer after brand refresh (34 days overdue)</span>
+          <span class="action-cmd">/vibecoat-guard quality</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="card">
+        <div class="card-title">Total Runs <span class="info-tip" data-tooltip="Total number of vibecoat-guard checks performed on this project, including verify, regression, quality gate, and pre-commit hook runs.">?</span></div>
+        <div class="card-value" data-count="142">0</div>
+        <div class="card-trend trend-up">&#9650; 23 this week</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Issues Found <span class="info-tip" data-tooltip="Total issues detected by the 13 quality gate agents across all runs. Lower is better — it means fewer problems in your code.">?</span></div>
+        <div class="card-value" data-count="89">0</div>
+        <div class="card-trend trend-down">&#9660; 12 fewer than last week</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Shield Blocks <span class="info-tip" data-tooltip="Number of regressions caught and blocked before they could reach production. Each block represents a potential bug that was prevented.">?</span></div>
+        <div class="card-value" data-count="47">0</div>
+        <div class="card-trend trend-up">&#9650; 8 this week</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg Agent Score <span class="info-tip" data-tooltip="Average score across all 13 quality agents in the latest quality gate run. Perfect score is 10.0.">?</span></div>
+        <div class="card-value" data-count="9.4">0</div>
+        <div class="card-trend trend-up">&#9650; +0.3 from last run</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          Score Trend (Last 13 Runs)
+          <span class="info-tip" data-tooltip="How your average quality gate score has changed over the last 13 runs. An upward trend indicates improving code quality.">?</span>
+        </div>
+        <div class="chart-container"><canvas id="chart-score-trend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          Issue Severity Distribution
+          <span class="info-tip" data-tooltip="Breakdown of all issues by severity level. Critical issues should be addressed immediately.">?</span>
+        </div>
+        <div class="chart-container"><canvas id="chart-severity"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Recent Tables -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          Recent Runs
+          <span class="info-tip" data-tooltip="Chronological log of all vibecoat-guard runs. Green = passed, Red = failed, Amber = partial.">?</span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Status</th><th>Type</th><th>Time</th><th>Issues</th></tr></thead>
+            <tbody>
+              <tr><td><span class="status-dot pass"></span></td><td>Quality Gate</td><td class="header-time">Mar 24, 14:32</td><td>0</td></tr>
+              <tr><td><span class="status-dot pass"></span></td><td>Verify</td><td class="header-time">Mar 24, 14:28</td><td>0</td></tr>
+              <tr><td><span class="status-dot fail"></span></td><td>Pre-commit</td><td class="header-time">Mar 24, 13:15</td><td>2</td></tr>
+              <tr><td><span class="status-dot pass"></span></td><td>Regression</td><td class="header-time">Mar 24, 11:42</td><td>0</td></tr>
+              <tr><td><span class="status-dot partial"></span></td><td>Quality Gate</td><td class="header-time">Mar 23, 17:55</td><td>4</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Shield Events</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Blocked</th><th>File</th><th>Type</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="file">Router.tsx</span></td><td>Missing marker</td></tr>
+              <tr><td><span class="badge badge-warning">HIGH</span></td><td><span class="file">Sidebar.tsx</span></td><td>Count drop</td></tr>
+              <tr><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="file">auth.ts</span></td><td>Missing marker</td></tr>
+              <tr><td><span class="badge badge-good">MEDIUM</span></td><td><span class="file">api/users.ts</span></td><td>Visual regression</td></tr>
+              <tr><td><span class="badge badge-warning">HIGH</span></td><td><span class="file">Dashboard.tsx</span></td><td>Functional fail</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TIMELINE PAGE ===================== -->
+  <div class="page" id="page-timeline">
+    <div class="section-title">
+      Run Timeline
+      <span class="info-tip" data-tooltip="Chronological log of all vibecoat-guard runs. Green = passed, Red = failed, Amber = partial. Click a run to see details.">?</span>
+    </div>
+    <div class="section-subtitle">Every vibecoat-guard check is logged here. Use filters to focus on specific run types.</div>
+    <div class="filter-bar" id="timeline-filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="verify">Verify</button>
+      <button class="filter-btn" data-filter="regression">Regression</button>
+      <button class="filter-btn" data-filter="quality-gate">Quality Gate</button>
+      <button class="filter-btn" data-filter="pre-commit">Pre-commit</button>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="padding: 24px;">
+        <div class="timeline" id="timeline-list">
+          <div class="timeline-item" data-type="quality-gate" data-run="0">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 24, 14:32</div>
+            <div class="timeline-label">Quality Gate &mdash; PASS</div>
+            <div class="timeline-detail">All 13 agents: 10/10. 3 iterations. 8.2 min.</div>
+          </div>
+          <div class="timeline-item" data-type="verify" data-run="1">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 24, 14:28</div>
+            <div class="timeline-label">Verify &mdash; PASS</div>
+            <div class="timeline-detail">57/57 markers present. Counts stable. 0.08s.</div>
+          </div>
+          <div class="timeline-item" data-type="pre-commit" data-run="2">
+            <div class="timeline-dot" style="background: var(--score-critical)"></div>
+            <div class="timeline-time">Mar 24, 13:15</div>
+            <div class="timeline-label">Pre-commit &mdash; FAIL</div>
+            <div class="timeline-detail">2 markers missing in Router.tsx. Commit blocked.</div>
+          </div>
+          <div class="timeline-item" data-type="regression" data-run="3">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 24, 11:42</div>
+            <div class="timeline-label">Regression Suite &mdash; PASS</div>
+            <div class="timeline-detail">Structural: OK. Visual: 10 pages. Functional: 8 flows.</div>
+          </div>
+          <div class="timeline-item active-run" data-type="quality-gate" data-run="4">
+            <div class="timeline-dot" style="background: var(--score-warning)"></div>
+            <div class="timeline-time">Mar 23, 17:55</div>
+            <div class="timeline-label">Quality Gate &mdash; PARTIAL</div>
+            <div class="timeline-detail">11/13 agents passed. Security: 8, i18n: 7. Iteration 2/3.</div>
+          </div>
+          <div class="timeline-item" data-type="verify" data-run="5">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 23, 16:30</div>
+            <div class="timeline-label">Pre-Flight &mdash; PASS</div>
+            <div class="timeline-detail">3 agents planned. 1 conflict. Sequential recommended.</div>
+          </div>
+          <div class="timeline-item" data-type="verify" data-run="6">
+            <div class="timeline-dot" style="background: var(--score-critical)"></div>
+            <div class="timeline-time">Mar 23, 15:10</div>
+            <div class="timeline-label">Verify &mdash; FAIL</div>
+            <div class="timeline-detail">Import count dropped in Sidebar.tsx (8 to 6).</div>
+          </div>
+          <div class="timeline-item" data-type="regression" data-run="7">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 23, 14:20</div>
+            <div class="timeline-label">Regression Suite &mdash; PASS</div>
+            <div class="timeline-detail">All 3 agents passed. No regressions.</div>
+          </div>
+          <div class="timeline-item" data-type="pre-commit" data-run="8">
+            <div class="timeline-dot" style="background: var(--score-critical)"></div>
+            <div class="timeline-time">Mar 22, 18:45</div>
+            <div class="timeline-label">Pre-commit &mdash; FAIL</div>
+            <div class="timeline-detail">3 auth markers missing in auth.ts. Commit blocked.</div>
+          </div>
+          <div class="timeline-item" data-type="quality-gate" data-run="9">
+            <div class="timeline-dot" style="background: var(--score-perfect)"></div>
+            <div class="timeline-time">Mar 22, 16:00</div>
+            <div class="timeline-label">Quality Gate &mdash; PASS</div>
+            <div class="timeline-detail">All 13 agents: 10/10. 2 iterations. 6.1 min.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="run-detail-panel">
+        <div class="card-title">Run Detail <span class="info-tip" data-tooltip="Click on a timeline item on the left to see its full details here. Each run type shows different relevant information.">?</span></div>
+        <div id="run-detail-content"></div>
+        <div style="position:relative;height:220px;display:none;" id="run-detail-chart-wrap"><canvas id="chart-timeline-detail"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== AGENTS PAGE ===================== -->
+  <div class="page" id="page-agents">
+    <div class="section-title">
+      Agent Scorecards
+      <span class="info-tip" data-tooltip="Each of the 13 quality gate agents evaluates a specific aspect of your code. Scores range from 0 (critical issues) to 10 (perfect). The trend dots show the last 5 scores.">?</span>
+    </div>
+    <div class="section-subtitle">Your 13 quality gate agents each evaluate a specific dimension of code quality. Track their performance over time to identify systemic gaps.</div>
+    <div class="grid-2" style="margin-bottom: 24px;">
+      <div class="card">
+        <div class="card-title">
+          Agent Radar &mdash; Latest vs Previous
+          <span class="info-tip" data-tooltip="Visual comparison of all 13 agents. The latest scores (solid) are compared against the previous run (dashed). Dips indicate areas needing attention.">?</span>
+        </div>
+        <div class="chart-container"><canvas id="chart-radar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Historical Avg vs Lowest Score <span class="info-tip" data-tooltip="Shows the average score and lowest recorded score per agent across all runs. Agents with a large gap between avg and lowest are volatile and need attention.">?</span></div>
+        <div class="chart-container"><canvas id="chart-agent-bars"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-13" id="agent-cards"></div>
+    <div class="card">
+      <div class="card-title">
+        Agent Heatmap &mdash; Last 8 Quality Gate Runs
+        <span class="info-tip" data-tooltip="Score history across runs. Each cell is color-coded: green = 10 (perfect), blue = 7-9 (good), amber = 4-6 (needs work), red = 0-3 (critical).">?</span>
+      </div>
+      <div class="table-wrapper" style="margin-top: 12px;">
+        <table>
+          <thead><tr><th>Run</th><th>ARCH</th><th>CODE</th><th>SEC</th><th>FUNC</th><th>UX</th><th>VIS</th><th>RESP</th><th>A11Y</th><th>COPY</th><th>BRAND</th><th>I18N</th><th>PERF</th><th>BIZ</th></tr></thead>
+          <tbody id="heatmap-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ISSUES PAGE ===================== -->
+  <div class="page" id="page-issues">
+    <div class="section-title">
+      Issues &amp; Resolution Log
+      <span class="info-tip" data-tooltip="Complete history of all issues found, resolved, and accepted. Recurring issues at the same location are flagged as systemic — they need architectural fixes, not patches.">?</span>
+    </div>
+    <div class="section-subtitle">All issues found by quality agents, tracked from detection through resolution. Filter by status to focus on what needs attention now.</div>
+    <div class="filter-bar" id="issues-filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="open">Open</button>
+      <button class="filter-btn" data-filter="resolved">Resolved</button>
+      <button class="filter-btn" data-filter="accepted">Accepted</button>
+    </div>
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-title">Open Issues <span class="info-tip" data-tooltip="Issues from the most recent quality gate run that still need to be fixed.">?</span></div>
+        <div class="card-value" style="color: var(--score-warning)">3</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Critical</div>
+        <div class="card-value" style="color: var(--score-critical)">1</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg Resolution</div>
+        <div class="card-value">1.8 <span style="font-size: 14px; color: var(--text-muted)">iter</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Resolution Rate <span class="info-tip" data-tooltip="Percentage of all issues that were successfully resolved. Higher is better.">?</span></div>
+        <div class="card-value" style="color: var(--score-perfect)">96%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Severity</th><th>Agent</th><th>File</th><th>Issue</th><th>Status</th><th>Run</th></tr></thead>
+          <tbody id="issues-table-body">
+            <tr data-status="open"><td><span class="badge badge-critical">CRITICAL</span></td><td>Security</td><td><span class="file">src/auth.ts:42</span></td><td>Missing input validation on login endpoint</td><td><span class="badge badge-warning">Open</span></td><td>#142</td></tr>
+            <tr data-status="open"><td><span class="badge badge-warning">HIGH</span></td><td>Accessibility</td><td><span class="file">src/Sidebar.tsx:88</span></td><td>Missing ARIA labels on navigation links</td><td><span class="badge badge-warning">Open</span></td><td>#142</td></tr>
+            <tr data-status="open"><td><span class="badge badge-good">MEDIUM</span></td><td>i18n</td><td><span class="file">src/Dashboard.tsx:15</span></td><td>Hardcoded string "Settings"</td><td><span class="badge badge-warning">Open</span></td><td>#142</td></tr>
+            <tr data-status="resolved"><td><span class="badge badge-critical">CRITICAL</span></td><td>Security</td><td><span class="file">src/api/users.ts:23</span></td><td>SQL injection via unsanitized query param</td><td><span class="badge badge-perfect">Resolved</span></td><td>#140</td></tr>
+            <tr data-status="resolved"><td><span class="badge badge-warning">HIGH</span></td><td>Architecture</td><td><span class="file">src/Router.tsx:67</span></td><td>Circular dependency with Layout component</td><td><span class="badge badge-perfect">Resolved</span></td><td>#138</td></tr>
+            <tr data-status="resolved"><td><span class="badge badge-warning">HIGH</span></td><td>Performance</td><td><span class="file">src/Dashboard.tsx:102</span></td><td>Unnecessary re-renders on state change</td><td><span class="badge badge-perfect">Resolved</span></td><td>#136</td></tr>
+            <tr data-status="resolved"><td><span class="badge badge-good">MEDIUM</span></td><td>Copy</td><td><span class="file">src/Login.tsx:34</span></td><td>Error message too vague: "Something went wrong"</td><td><span class="badge badge-perfect">Resolved</span></td><td>#135</td></tr>
+            <tr data-status="accepted"><td><span class="badge badge-good">MEDIUM</span></td><td>Responsive</td><td><span class="file">src/Table.tsx:22</span></td><td>Horizontal scroll on mobile for data table</td><td><span class="badge badge-accent">Accepted</span></td><td>#130</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHIELD PAGE ===================== -->
+  <div class="page" id="page-shield">
+    <div class="section-title">
+      Shield / Regressions Prevented
+      <span class="info-tip" data-tooltip="Every time vibecoat-guard catches a regression before it ships, it counts as a 'shield block.' This counter shows the total value the guard has provided.">?</span>
+    </div>
+    <div class="section-subtitle">The guard's greatest value is what it prevents. This page shows every regression caught before it could reach production.</div>
+
+    <!-- Row 1: Shield indicator + Cumulative chart -->
+    <div class="grid-2" style="grid-template-columns: 340px 1fr;">
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 24px;background:linear-gradient(135deg, var(--bg-surface) 0%, rgba(16,185,129,0.06) 100%);border-color:rgba(16,185,129,0.15);">
+        <div style="width:140px;height:140px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 0 40px rgba(16,185,129,0.15),0 0 80px rgba(16,185,129,0.05);">
+          <div style="width:108px;height:108px;border-radius:50%;background:var(--bg-surface);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 20px rgba(16,185,129,0.08),0 0 24px rgba(16,185,129,0.2);">
+            <span style="font-size:clamp(36px,3vw,48px);font-weight:700;color:var(--score-perfect);" data-count="47">0</span>
+          </div>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Regressions Prevented</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Across all layers since Mar 10</div>
+        <div style="width:100%;height:1px;background:var(--border-default);margin-bottom:14px;"></div>
+        <div style="display:flex;gap:16px;justify-content:center;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--score-critical);">18</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Marker</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--score-warning);">9</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Count</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--chart-6);">8</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Visual</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--chart-7);">7</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Func</div></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--text-muted);">5</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Build</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cumulative Regressions Blocked <span class="info-tip" data-tooltip="Shows how regressions prevented have accumulated over time. A rising line means the guard is consistently catching issues.">?</span></div>
+        <div class="chart-container"><canvas id="chart-shield-cumulative"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Blocks by category — individual mini charts -->
+    <div class="section-title" style="margin-top:8px;">Blocks by Category</div>
+    <div class="shield-cats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;">
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Marker Missing</div>
+        <div style="position:relative;width:64px;height:64px;margin:0 auto 8px;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--bg-elevated)" stroke-width="6"></circle>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--score-critical)" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="100.7"></circle>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:var(--score-critical);">18</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">38% of blocks</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Count Drop</div>
+        <div style="position:relative;width:64px;height:64px;margin:0 auto 8px;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--bg-elevated)" stroke-width="6"></circle>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--score-warning)" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="132.1"></circle>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:var(--score-warning);">9</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">19% of blocks</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Visual</div>
+        <div style="position:relative;width:64px;height:64px;margin:0 auto 8px;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--bg-elevated)" stroke-width="6"></circle>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#ec4899" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="135.6"></circle>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:#ec4899;">8</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">17% of blocks</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Functional</div>
+        <div style="position:relative;width:64px;height:64px;margin:0 auto 8px;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--bg-elevated)" stroke-width="6"></circle>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#06b6d4" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="139.0"></circle>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:#06b6d4;">7</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">15% of blocks</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Build Fail</div>
+        <div style="position:relative;width:64px;height:64px;margin:0 auto 8px;">
+          <svg viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--bg-elevated)" stroke-width="6"></circle>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--text-muted)" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="146.0"></circle>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:var(--text-muted);">5</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">11% of blocks</div>
+      </div>
+    </div>
+
+    <!-- Row 3: Recent prevention events -->
+    <div class="section-title">Recent Prevention Events</div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Severity</th><th>Event</th><th>File</th><th>Caught By</th><th>Date</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-critical">CRITICAL</span></td><td>Missing route markers &mdash; 2 markers removed during refactor</td><td><span class="file">Router.tsx</span></td><td>Pre-commit hook</td><td class="header-time">Mar 24, 13:15</td></tr>
+            <tr><td><span class="badge badge-warning">HIGH</span></td><td>Import count regression &mdash; imports dropped from 8 to 6</td><td><span class="file">Sidebar.tsx</span></td><td>Verify layer</td><td class="header-time">Mar 23, 15:10</td></tr>
+            <tr><td><span class="badge badge-critical">CRITICAL</span></td><td>Auth markers missing &mdash; 3 authentication flow markers removed</td><td><span class="file">auth.ts</span></td><td>Pre-commit hook</td><td class="header-time">Mar 22, 18:45</td></tr>
+            <tr><td><span class="badge badge-good">MEDIUM</span></td><td>Visual element missing &mdash; footer navigation disappeared after layout change</td><td><span class="file">Home page</span></td><td>Visual regression agent</td><td class="header-time">Mar 22, 14:20</td></tr>
+            <tr><td><span class="badge badge-warning">HIGH</span></td><td>Functional flow broken &mdash; submit button click handler removed</td><td><span class="file">Login flow</span></td><td>Functional agent</td><td class="header-time">Mar 21, 16:30</td></tr>
+            <tr><td><span class="badge badge-warning">HIGH</span></td><td>Switch case removed &mdash; case 'analytics' removed from view switch</td><td><span class="file">Dashboard.tsx</span></td><td>Verify layer</td><td class="header-time">Mar 21, 11:00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== HOTSPOTS PAGE ===================== -->
+  <div class="page" id="page-hotspots">
+    <div class="section-title">
+      Hotspot Risk Map
+      <span class="info-tip" data-tooltip="Files ranked by risk = commit frequency x regression rate. Research shows the top 5-10% of files cause 25-70% of all defects. Focus refactoring effort here.">?</span>
+    </div>
+    <div class="section-subtitle">These are the files that change most often and cause the most regressions. Refactoring high-risk files has the highest return on investment.</div>
+
+    <!-- KPI row -->
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-title">Tracked Hotspots <span class="info-tip" data-tooltip="Files with 5+ changes in the last 50 commits are automatically tracked as hotspots.">?</span></div>
+        <div class="card-value">8</div>
+        <div class="card-trend trend-flat">of 42 project files</div>
+      </div>
+      <div class="card">
+        <div class="card-title">High Risk Files</div>
+        <div class="card-value" style="color:var(--score-critical);">3</div>
+        <div class="card-trend trend-down">&#9660; 1 fewer than last week</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total Markers <span class="info-tip" data-tooltip="Feature markers tracked across all hotspot files. Each marker represents a critical code pattern that must not be accidentally removed.">?</span></div>
+        <div class="card-value">57</div>
+        <div class="card-trend trend-up">&#9650; 4 added this week</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Riskiest File</div>
+        <div class="card-value" style="font-size:clamp(14px,1vw+6px,18px);font-family:var(--font-mono);color:var(--score-critical);">Router.tsx</div>
+        <div class="card-trend trend-flat">18 commits &bull; 5 regressions</div>
+      </div>
+    </div>
+
+    <!-- Risk table -->
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">Hotspot Files Ranked by Risk <span class="info-tip" data-tooltip="Risk = commit frequency x regression rate. The risk bar shows relative risk compared to the highest-risk file. Markers column shows how many feature markers are tracked in that file.">?</span></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>File</th><th>Risk Level</th><th style="width:30%;">Risk Score</th><th>Commits</th><th>Regressions</th><th>Markers</th><th>Last Issue</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="file">src/Router.tsx</span></td>
+              <td><span class="badge badge-critical">HIGH</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--score-critical);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-critical);width:24px;text-align:right;">90</span></div></td>
+              <td>18</td><td>5</td><td>12</td><td style="font-size:12px;color:var(--text-muted);">Mar 24</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/auth.ts</span></td>
+              <td><span class="badge badge-critical">HIGH</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:82%;background:var(--score-critical);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-critical);width:24px;text-align:right;">74</span></div></td>
+              <td>12</td><td>4</td><td>8</td><td style="font-size:12px;color:var(--text-muted);">Mar 22</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/components/Sidebar.tsx</span></td>
+              <td><span class="badge badge-critical">HIGH</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:70%;background:var(--score-critical);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-critical);width:24px;text-align:right;">63</span></div></td>
+              <td>14</td><td>3</td><td>10</td><td style="font-size:12px;color:var(--text-muted);">Mar 23</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/api/users.ts</span></td>
+              <td><span class="badge badge-warning">MEDIUM</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:40%;background:var(--score-warning);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-warning);width:24px;text-align:right;">36</span></div></td>
+              <td>9</td><td>2</td><td>6</td><td style="font-size:12px;color:var(--text-muted);">Mar 20</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/Dashboard.tsx</span></td>
+              <td><span class="badge badge-warning">MEDIUM</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:36%;background:var(--score-warning);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-warning);width:24px;text-align:right;">32</span></div></td>
+              <td>8</td><td>2</td><td>5</td><td style="font-size:12px;color:var(--text-muted);">Mar 21</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/components/Table.tsx</span></td>
+              <td><span class="badge badge-good">LOW</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:18%;background:var(--score-good);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-good);width:24px;text-align:right;">16</span></div></td>
+              <td>7</td><td>1</td><td>4</td><td style="font-size:12px;color:var(--text-muted);">Mar 18</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/Settings.tsx</span></td>
+              <td><span class="badge badge-perfect">SAFE</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:6%;background:var(--score-perfect);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-perfect);width:24px;text-align:right;">6</span></div></td>
+              <td>6</td><td>0</td><td>4</td><td style="font-size:12px;color:var(--text-muted);">&mdash;</td>
+            </tr>
+            <tr>
+              <td><span class="file">src/Login.tsx</span></td>
+              <td><span class="badge badge-good">LOW</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;"><div style="height:100%;width:12%;background:var(--score-good);border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:var(--score-good);width:24px;text-align:right;">11</span></div></td>
+              <td>5</td><td>1</td><td>4</td><td style="font-size:12px;color:var(--text-muted);">Mar 15</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Risk trend chart -->
+    <div class="card">
+      <div class="card-title">Risk Score Trend &mdash; Top 3 Hotspots <span class="info-tip" data-tooltip="Shows how the risk score of your most critical files has evolved over time. A declining line means your refactoring efforts are working.">?</span></div>
+      <div class="chart-container"><canvas id="chart-hotspot-changes"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ===================== DEBT PAGE ===================== -->
+  <div class="page" id="page-debt">
+    <div class="section-title">
+      Technical Debt Ledger
+      <span class="info-tip" data-tooltip="Every accepted exception and stagnation event is explicit technical debt. This page tracks what you owe, how long you've owed it, and what it costs your project health.">?</span>
+    </div>
+    <div class="section-subtitle">Debt you knowingly carry. Each item here was a conscious trade-off — but trade-offs have expiry dates. Items over 30 days need review.</div>
+
+    <!-- KPI row -->
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-title">Open Debt Items <span class="info-tip" data-tooltip="Total number of accepted exceptions and unresolved stagnation events. Each represents a known quality gap.">?</span></div>
+        <div class="card-value" style="color:var(--score-warning);">4</div>
+        <div class="card-trend trend-down">&#9660; 7 resolved this month</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Overdue Items <span class="info-tip" data-tooltip="Debt items older than 30 days that haven't been reviewed. These need immediate attention — the original reason for accepting may no longer hold.">?</span></div>
+        <div class="card-value" style="color:var(--score-critical);">1</div>
+        <div class="card-trend trend-flat">Branding: 34 days</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Health Score Impact <span class="info-tip" data-tooltip="Estimated health score points lost due to open debt items. Resolving all debt would raise your health score by this amount.">?</span></div>
+        <div class="card-value">-5 <span style="font-size:14px;color:var(--text-muted);">pts</span></div>
+        <div class="card-trend trend-flat">95 &rarr; 100 if resolved</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg Debt Age</div>
+        <div class="card-value">17 <span style="font-size:14px;color:var(--text-muted);">days</span></div>
+        <div class="card-trend trend-up">&#9650; Oldest: 34 days</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Debt Accumulation vs Resolution <span class="info-tip" data-tooltip="Green line: cumulative debt items resolved. Amber line: cumulative debt items added. When green stays above amber, you're paying down debt faster than accumulating it.">?</span></div>
+        <div class="chart-container"><canvas id="chart-debt-trend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Debt by Agent <span class="info-tip" data-tooltip="Which quality agents produce the most unresolvable issues. Agents with high debt counts may need different approaches or architectural fixes.">?</span></div>
+        <div class="chart-container"><canvas id="chart-debt-pie"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Debt items table -->
+    <div class="card">
+      <div class="card-title">Debt Register <span class="info-tip" data-tooltip="Complete list of all open debt items. Each row shows what was accepted, why, how old it is, and what impact it has on your health score.">?</span></div>
+      <div class="table-wrapper" style="margin-top:12px;">
+        <table>
+          <thead><tr><th>Type</th><th>Agent</th><th>File</th><th>Description</th><th>Reason Accepted</th><th style="width:12%;">Age</th><th>Impact</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-accent">Exception</span></td>
+              <td>Branding</td>
+              <td><span class="file">src/Footer.tsx</span></td>
+              <td>Legacy logo not matching brand guidelines</td>
+              <td style="font-size:12px;color:var(--text-muted);">Waiting for brand refresh in April</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="flex:1;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--score-critical);border-radius:2px;"></div></div>
+                  <span style="font-size:11px;font-weight:600;color:var(--score-critical);">34d</span>
+                </div>
+              </td>
+              <td style="font-size:12px;font-weight:600;color:var(--score-warning);">-1 pt</td>
+              <td><span class="badge badge-critical">Overdue</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-accent">Exception</span></td>
+              <td>Responsive</td>
+              <td><span class="file">src/Table.tsx:22</span></td>
+              <td>Horizontal scroll on mobile for data tables</td>
+              <td style="font-size:12px;color:var(--text-muted);">Accepted as design decision for dense data</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="flex:1;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--score-warning);border-radius:2px;"></div></div>
+                  <span style="font-size:11px;font-weight:600;color:var(--score-warning);">18d</span>
+                </div>
+              </td>
+              <td style="font-size:12px;font-weight:600;color:var(--text-muted);">-1 pt</td>
+              <td><span class="badge badge-good">OK</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-accent">Exception</span></td>
+              <td>i18n</td>
+              <td><span class="file">src/Admin.tsx</span></td>
+              <td>Admin panel is English-only</td>
+              <td style="font-size:12px;color:var(--text-muted);">i18n deferred to Q3 roadmap</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="flex:1;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;"><div style="height:100%;width:40%;background:var(--score-good);border-radius:2px;"></div></div>
+                  <span style="font-size:11px;font-weight:600;color:var(--score-good);">12d</span>
+                </div>
+              </td>
+              <td style="font-size:12px;font-weight:600;color:var(--score-warning);">-2 pts</td>
+              <td><span class="badge badge-good">OK</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">Stagnation</span></td>
+              <td>Performance</td>
+              <td><span class="file">src/Dashboard.tsx</span></td>
+              <td>Re-renders on state change &mdash; score stuck at 8/10 for 3 iterations</td>
+              <td style="font-size:12px;color:var(--text-muted);">Needs architectural rethink (memo vs context)</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="flex:1;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;"><div style="height:100%;width:17%;background:var(--score-good);border-radius:2px;"></div></div>
+                  <span style="font-size:11px;font-weight:600;color:var(--score-good);">5d</span>
+                </div>
+              </td>
+              <td style="font-size:12px;font-weight:600;color:var(--score-warning);">-1 pt</td>
+              <td><span class="badge badge-warning">Review</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PERFORMANCE PAGE ===================== -->
+  <div class="page" id="page-performance">
+    <div class="section-title">
+      Performance Metrics
+      <span class="info-tip" data-tooltip="How long each vibecoat-guard layer takes to run. If quality gate iterations are increasing, features are getting harder to ship cleanly.">?</span>
+    </div>
+    <div class="section-subtitle">Monitor how efficiently the guard runs. Rising iteration counts may signal increasing technical complexity.</div>
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-title">Avg Duration</div>
+        <div class="card-value">4.2<span style="font-size: 14px; color: var(--text-muted)"> min</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Fastest Run</div>
+        <div class="card-value" style="color: var(--score-perfect)">0.08<span style="font-size: 14px; color: var(--text-muted)"> s</span></div>
+        <div class="card-trend trend-flat">Verify</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Slowest Run</div>
+        <div class="card-value" style="color: var(--score-warning)">12.4<span style="font-size: 14px; color: var(--text-muted)"> min</span></div>
+        <div class="card-trend trend-flat">Quality Gate (5 iter)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total Time</div>
+        <div class="card-value">9.8<span style="font-size: 14px; color: var(--text-muted)"> hrs</span></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Run Duration by Layer</div>
+        <div class="chart-container"><canvas id="chart-perf-layers"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          Quality Gate Convergence (Iterations to 10/10)
+          <span class="info-tip" data-tooltip="Average number of quality gate iterations needed to reach 10/10. A decreasing trend means your team is writing better code from the start.">?</span>
+        </div>
+        <div class="chart-container"><canvas id="chart-perf-convergence"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== GIT PAGE ===================== -->
+  <div class="page" id="page-git">
+    <div class="section-title">
+      Git Context
+      <span class="info-tip" data-tooltip="Links quality data to your development workflow. Shows which branches and files are most active and most problematic.">?</span>
+    </div>
+    <div class="section-subtitle">Connect quality data to your development workflow. See which branches trigger failures and which files change most.</div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">Current Branch</div>
+        <div class="card-value" style="font-size: 18px; font-family: var(--font-mono);">feature/sidebar</div>
+        <div class="card-trend trend-flat">Last commit: a1b2c3d</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pre-commit Hook</div>
+        <div class="card-value" style="color: var(--score-perfect)">Active</div>
+        <div class="card-trend">Last block: Mar 24 &bull; Total: 12 blocks</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Branch Failure Rate</div>
+        <div class="card-value">23%</div>
+        <div class="card-trend trend-down">feature/auth: 45% &bull; main: 8%</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Commits Per Day (Last 14 Days)</div>
+        <div class="chart-container"><canvas id="chart-git-commits"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Hotspot File Changes</div>
+        <div class="chart-container"><canvas id="chart-git-hotspot"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Chart.js loaded at end of body so DOM is ready -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+// ---- DATA ----
+var AGENTS = ['Architecture','Code Quality','Security','Functional','UX','Visual Design','Responsive','Accessibility','Copy','Branding','i18n','Performance','Business'];
+var COLORS = ['#6366f1','#8b5cf6','#ef4444','#f59e0b','#10b981','#ec4899','#06b6d4','#3b82f6','#14b8a6','#f97316','#a78bfa','#22d3ee','#84cc16'];
+var SCORES = [
+  [6,5,5,7,6,5,6,5,7,7,4,5,6],
+  [7,6,5,8,7,6,7,6,7,8,5,6,7],
+  [7,7,6,8,7,7,7,7,8,8,5,7,7],
+  [8,7,6,9,8,7,8,7,8,9,6,7,8],
+  [8,8,7,9,8,8,8,8,8,9,6,8,8],
+  [9,8,7,9,9,8,9,8,9,9,7,8,9],
+  [9,9,8,10,9,9,9,9,9,10,8,8,9],
+  [9,9,8,10,9,8,9,8,9,9,7,8,9],
+  [10,10,9,10,10,10,10,9,10,10,8,9,10],
+  [10,10,9,10,10,9,10,9,10,10,8,9,10],
+  [10,10,10,10,10,10,10,10,10,10,9,10,10],
+  [10,10,9,10,10,9,10,9,10,10,9,10,10],
+  [10,10,10,10,10,10,10,10,10,10,10,10,10]
+];
+var LABELS = ['Mar 10','Mar 11','Mar 12','Mar 14','Mar 15','Mar 17','Mar 18','Mar 19','Mar 20','Mar 21','Mar 22','Mar 23','Mar 24'];
+
+// ---- STATE ----
+var CI = {};
+
+// ---- THEME ----
+function toggleTheme() {
+  var html = document.documentElement;
+  var current = html.getAttribute('data-theme');
+  var next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.querySelector('.theme-toggle .icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+  destroyAllCharts();
+  var active = document.querySelector('.tab.active');
+  if (active) { initAllCharts(); }
+}
+
+function destroyAllCharts() {
+  Object.keys(CI).forEach(function(k) { CI[k].destroy(); delete CI[k]; });
+}
+
+// ---- COUNT-UP ANIMATION ----
+function animateCount() {
+  document.querySelectorAll('[data-count]').forEach(function(el) {
+    var target = parseFloat(el.dataset.count);
+    var isFloat = target % 1 !== 0;
+    var start = performance.now();
+    var duration = 600;
+    function update(now) {
+      var progress = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = isFloat ? (target * eased).toFixed(1) : Math.round(target * eased);
+      if (progress < 1) { requestAnimationFrame(update); }
+    }
+    requestAnimationFrame(update);
+  });
+}
+
+// ---- CHART DEFAULTS ----
+function getDefaults() {
+  var s = getComputedStyle(document.documentElement);
+  return {
+    textColor: s.getPropertyValue('--text-muted').trim(),
+    gridColor: s.getPropertyValue('--border-default').trim()
+  };
+}
+
+// ---- GRADIENT HELPER ----
+function makeGradient(ctx, color, height) {
+  var g = ctx.createLinearGradient(0, 0, 0, height || 280);
+  g.addColorStop(0, color.replace(')', ',0.35)').replace('rgb', 'rgba'));
+  g.addColorStop(1, color.replace(')', ',0.02)').replace('rgb', 'rgba'));
+  return g;
+}
+function hexGradient(ctx, hex, height) {
+  var r = parseInt(hex.slice(1,3),16), g2 = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  var g = ctx.createLinearGradient(0, 0, 0, height || 280);
+  g.addColorStop(0, 'rgba('+r+','+g2+','+b+',0.35)');
+  g.addColorStop(1, 'rgba('+r+','+g2+','+b+',0.02)');
+  return g;
+}
+
+// ---- CHART BUILDERS ----
+function buildScoreTrend(d) {
+  if (CI['st']) { return; }
+  var canvas = document.getElementById('chart-score-trend');
+  var ctx = canvas.getContext('2d');
+  var avg = SCORES.map(function(row) {
+    return parseFloat((row.reduce(function(a, b) { return a + b; }, 0) / row.length).toFixed(1));
+  });
+  CI['st'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: LABELS,
+      datasets: [{
+        label: 'Avg Score',
+        data: avg,
+        borderColor: '#6366f1',
+        backgroundColor: hexGradient(ctx, '#6366f1'),
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#6366f1',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 5, max: 10, grid: { color: d.gridColor }, ticks: { color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildSeverity(d) {
+  if (CI['sv']) { return; }
+  CI['sv'] = new Chart(document.getElementById('chart-severity'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Critical','High','Medium','Low'],
+      datasets: [{ data: [8,24,38,19], backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#6b6b80'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', color: d.textColor } } }
+    }
+  });
+}
+
+function buildTimelineDetail(d) {
+  // No static chart needed — detail panel is built dynamically by showRunDetail()
+}
+
+function buildRadar(d) {
+  if (CI['ra']) { return; }
+  CI['ra'] = new Chart(document.getElementById('chart-radar'), {
+    type: 'radar',
+    data: {
+      labels: AGENTS,
+      datasets: [
+        {
+          label: 'Latest',
+          data: SCORES[SCORES.length - 1],
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.2)',
+          pointBackgroundColor: '#6366f1',
+          borderWidth: 2
+        },
+        {
+          label: 'Previous',
+          data: SCORES[SCORES.length - 2],
+          borderColor: 'rgba(107,107,128,0.5)',
+          backgroundColor: 'rgba(107,107,128,0.05)',
+          pointBackgroundColor: '#6b6b80',
+          borderDash: [4,4],
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 5,
+          max: 10,
+          ticks: { stepSize: 1, color: d.textColor },
+          grid: { color: d.gridColor },
+          angleLines: { color: d.gridColor },
+          pointLabels: { color: d.textColor }
+        }
+      },
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor } } }
+    }
+  });
+}
+
+function buildAgentBars(d) {
+  if (CI['ab']) { return; }
+  // Calculate historical average AND min per agent across all runs
+  var avgs = [], mins = [];
+  for (var i = 0; i < AGENTS.length; i++) {
+    var sum = 0, min = 10;
+    for (var j = 0; j < SCORES.length; j++) {
+      sum += SCORES[j][i];
+      if (SCORES[j][i] < min) min = SCORES[j][i];
+    }
+    avgs.push(parseFloat((sum / SCORES.length).toFixed(1)));
+    mins.push(min);
+  }
+  CI['ab'] = new Chart(document.getElementById('chart-agent-bars'), {
+    type: 'bar',
+    data: {
+      labels: AGENTS.map(function(a) { return a.length > 10 ? a.substring(0, 10) + '.' : a; }),
+      datasets: [
+        { label: 'Avg Score', data: avgs, backgroundColor: COLORS.map(function(c) { return c + 'cc'; }), borderRadius: 4 },
+        { label: 'Lowest Score', data: mins, backgroundColor: COLORS.map(function(c) { return c + '44'; }), borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor, padding: 12 } } },
+      scales: {
+        y: { min: 0, max: 10, grid: { color: d.gridColor }, ticks: { color: d.textColor } },
+        x: { grid: { display: false }, ticks: { maxRotation: 45, color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildShieldCumulative(d) {
+  if (CI['sc']) { return; }
+  var canvas = document.getElementById('chart-shield-cumulative');
+  var ctx = canvas.getContext('2d');
+  CI['sc'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['Mar 10','Mar 11','Mar 12','Mar 13','Mar 14','Mar 15','Mar 16','Mar 17','Mar 18','Mar 19','Mar 20','Mar 21','Mar 22','Mar 23','Mar 24'],
+      datasets: [{
+        label: 'Blocked',
+        data: [3,6,9,12,15,18,21,24,27,30,33,37,40,44,47],
+        borderColor: '#10b981',
+        backgroundColor: hexGradient(ctx, '#10b981'),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, grid: { color: d.gridColor }, ticks: { color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildShieldCategory(d) {
+  // Replaced with SVG ring indicators — no chart needed
+}
+
+function buildHotspotChanges(d) {
+  if (CI['hc']) { return; }
+  var canvas = document.getElementById('chart-hotspot-changes');
+  var ctx = canvas.getContext('2d');
+  var weeks = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14'];
+  CI['hc'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: weeks,
+      datasets: [
+        { label: 'Router.tsx', data: [95,92,90,93,91,90,92,90,88,90,92,91,90,90], borderColor: '#ef4444', backgroundColor: hexGradient(ctx,'#ef4444'), fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 },
+        { label: 'auth.ts', data: [60,65,70,72,75,78,80,78,76,74,75,74,74,74], borderColor: '#f59e0b', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 2, borderWidth: 2 },
+        { label: 'Sidebar.tsx', data: [80,78,75,72,70,68,65,66,64,63,63,64,63,63], borderColor: '#6366f1', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 2, borderWidth: 2, borderDash: [4,3] }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor, padding: 16 } } },
+      scales: {
+        y: { min: 0, max: 100, grid: { color: d.gridColor }, ticks: { color: d.textColor }, title: { display: true, text: 'Risk Score', color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildDebtPie(d) {
+  if (CI['dp']) { return; }
+  CI['dp'] = new Chart(document.getElementById('chart-debt-pie'), {
+    type: 'bar',
+    data: {
+      labels: ['i18n','Performance','Responsive','Branding'],
+      datasets: [{
+        label: 'Impact (pts)',
+        data: [2,1,1,1],
+        backgroundColor: ['#a78bfa','#22d3ee','#06b6d4','#f97316'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min: 0, max: 3, grid: { color: d.gridColor }, ticks: { color: d.textColor, stepSize: 1 }, title: { display: true, text: 'Health score impact (points)', color: d.textColor } },
+        y: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildDebtTrend(d) {
+  if (CI['dt']) { return; }
+  var canvas = document.getElementById('chart-debt-trend');
+  var ctx = canvas.getContext('2d');
+  CI['dt'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: LABELS,
+      datasets: [{
+        label: 'Accumulated',
+        data: [3,4,5,6,7,8,9,9,10,10,11,11,11],
+        borderColor: '#f59e0b',
+        backgroundColor: hexGradient(ctx, '#f59e0b'),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+        borderWidth: 2
+      },{
+        label: 'Resolved',
+        data: [0,1,1,2,3,4,5,5,6,6,7,7,7],
+        borderColor: '#10b981',
+        backgroundColor: hexGradient(ctx, '#10b981'),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor, padding: 16 } } },
+      scales: {
+        y: { min: 0, grid: { color: d.gridColor }, ticks: { color: d.textColor }, title: { display: true, text: 'Debt items (cumulative)', color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildPerfLayers(d) {
+  if (CI['pl']) { return; }
+  CI['pl'] = new Chart(document.getElementById('chart-perf-layers'), {
+    type: 'bar',
+    data: {
+      labels: LABELS,
+      datasets: [
+        { label: 'Verify', data: [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1], backgroundColor: '#10b981', borderRadius: 2 },
+        { label: 'Regression', data: [2.8,2.5,2.3,2.1,1.8,2.3,1.9,2.2,2.0,1.9,2.0,1.9,2.0], backgroundColor: '#3b82f6', borderRadius: 2 },
+        { label: 'Quality Gate', data: [12.4,11.2,9.8,8.5,7.2,6.8,5.4,7.1,4.2,6.1,5.5,6.1,8.2], backgroundColor: '#6366f1', borderRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: d.textColor } },
+        y: { stacked: true, grid: { color: d.gridColor }, ticks: { color: d.textColor }, title: { display: true, text: 'Minutes', color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildPerfConvergence(d) {
+  if (CI['pc']) { return; }
+  var canvas = document.getElementById('chart-perf-convergence');
+  var ctx = canvas.getContext('2d');
+  CI['pc'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: LABELS,
+      datasets: [{
+        label: 'Iterations',
+        data: [6,5,5,5,4,3,3,4,2,3,3,3,3],
+        borderColor: '#6366f1',
+        backgroundColor: hexGradient(ctx, '#6366f1'),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointBackgroundColor: '#6366f1',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 6, grid: { color: d.gridColor }, ticks: { color: d.textColor }, title: { display: true, text: 'Iterations', color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildGitCommits(d) {
+  if (CI['gc']) { return; }
+  var days = [];
+  for (var i = 0; i < 14; i++) { days.push('Mar ' + (11 + i)); }
+  CI['gc'] = new Chart(document.getElementById('chart-git-commits'), {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [{ data: [3,5,4,2,6,8,3,4,7,5,6,3,5,4], backgroundColor: '#6366f1', borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: d.gridColor }, ticks: { color: d.textColor } },
+        x: { grid: { display: false }, ticks: { maxRotation: 45, color: d.textColor } }
+      }
+    }
+  });
+}
+
+function buildGitHotspot(d) {
+  if (CI['gh']) { return; }
+  CI['gh'] = new Chart(document.getElementById('chart-git-hotspot'), {
+    type: 'bar',
+    data: {
+      labels: ['Router','Sidebar','auth','api/users','Dashboard'],
+      datasets: [
+        { label: 'Additions', data: [45,32,28,18,22], backgroundColor: '#10b981', borderRadius: 4 },
+        { label: 'Deletions', data: [12,8,5,3,6], backgroundColor: '#ef4444', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: d.textColor } } },
+      scales: {
+        y: { grid: { color: d.gridColor }, ticks: { color: d.textColor } },
+        x: { grid: { display: false }, ticks: { color: d.textColor } }
+      }
+    }
+  });
+}
+
+// ---- INIT ALL CHARTS AT ONCE ----
+function initAllCharts() {
+  var d = getDefaults();
+  Chart.defaults.color = d.textColor;
+  Chart.defaults.borderColor = d.gridColor;
+
+  buildScoreTrend(d);
+  buildSeverity(d);
+  buildTimelineDetail(d);
+  buildRadar(d);
+  buildAgentBars(d);
+  buildShieldCumulative(d);
+  buildShieldCategory(d);
+  buildHotspotChanges(d);
+  buildDebtPie(d);
+  buildDebtTrend(d);
+  buildPerfLayers(d);
+  buildPerfConvergence(d);
+  buildGitCommits(d);
+  buildGitHotspot(d);
+}
+
+// ---- RENDER AGENT CARDS ----
+function renderAgents() {
+  var container = document.getElementById('agent-cards');
+  var latest = SCORES[SCORES.length - 1];
+  var html = '';
+  AGENTS.forEach(function(name, i) {
+    var score = latest[i];
+    var scoreColor = score === 10 ? 'var(--score-perfect)' : score >= 7 ? 'var(--score-good)' : score >= 4 ? 'var(--score-warning)' : 'var(--score-critical)';
+    var dotStatus = score === 10 ? 'pass' : score >= 7 ? 'partial' : 'fail';
+    var trendDots = '';
+    SCORES.slice(-5).forEach(function(row) {
+      var v = row[i];
+      var dc = v === 10 ? 'var(--score-perfect)' : v >= 7 ? 'var(--score-good)' : v >= 4 ? 'var(--score-warning)' : 'var(--score-critical)';
+      trendDots += '<div class="agent-trend-dot" style="background:' + dc + '"></div>';
+    });
+    html += '<div class="agent-card">'
+      + '<div class="agent-card-header"><span class="agent-name">' + name + '</span><span class="status-dot ' + dotStatus + '"></span></div>'
+      + '<div class="agent-score" style="color:' + scoreColor + '">' + score + '/10</div>'
+      + '<div class="agent-trend">' + trendDots + '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ---- RENDER HEATMAP ----
+function renderHeatmap() {
+  var body = document.getElementById('heatmap-body');
+  var last8 = SCORES.slice(-8).slice().reverse();
+  var last8Labels = LABELS.slice(-8).slice().reverse();
+  var html = '';
+  last8.forEach(function(scores, ri) {
+    var cells = '';
+    scores.forEach(function(s) {
+      var bg = s === 10 ? 'var(--score-perfect)' : s >= 7 ? 'var(--score-good)' : s >= 4 ? 'var(--score-warning)' : 'var(--score-critical)';
+      cells += '<td><div class="heatmap-cell" style="background:' + bg + '">' + s + '</div></td>';
+    });
+    html += '<tr><td class="header-time">' + last8Labels[ri] + '</td>' + cells + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+// ---- TIMELINE FILTER ----
+// ---- TIMELINE RUN DATA ----
+var TIMELINE_RUNS = [
+  { type:'Quality Gate', result:'pass', time:'Mar 24, 14:32', branch:'feature/sidebar', commit:'a1b2c3d', duration:'8.2 min', iterations:3, scores:SCORES[SCORES.length-1], issues:[] },
+  { type:'Verify', result:'pass', time:'Mar 24, 14:28', branch:'feature/sidebar', commit:'a1b2c3d', duration:'0.08s', markers:'57/57 present', counts:'All stable' },
+  { type:'Pre-commit', result:'fail', time:'Mar 24, 13:15', branch:'feature/sidebar', commit:'blocked', duration:'34s', blocked:[{file:'Router.tsx',marker:'case \'settings\':'},{file:'Router.tsx',marker:'case \'analytics\':'}] },
+  { type:'Regression', result:'pass', time:'Mar 24, 11:42', branch:'feature/sidebar', commit:'f4e5d6c', duration:'2.1 min', structural:'PASS (48/48 markers)', visual:'PASS (10 pages)', functional:'PASS (8 flows)' },
+  { type:'Quality Gate', result:'partial', time:'Mar 23, 17:55', branch:'feature/sidebar', commit:'b7c8d9e', duration:'7.1 min', iterations:3, scores:SCORES[7], issues:[{sev:'HIGH',desc:'Security: Missing CSRF protection on API endpoint'},{sev:'MEDIUM',desc:'i18n: 3 hardcoded strings in Dashboard'},{sev:'MEDIUM',desc:'Accessibility: Focus trap missing in modal'},{sev:'LOW',desc:'Performance: Unnecessary re-render in Sidebar'}] },
+  { type:'Pre-Flight', result:'pass', time:'Mar 23, 16:30', branch:'feature/sidebar', commit:'c1d2e3f', duration:'0.2s', agents:3, conflicts:[{file:'Router.tsx',agents:['Agent A','Agent B']}], recommendation:'Sequential for Router.tsx' },
+  { type:'Verify', result:'fail', time:'Mar 23, 15:10', branch:'feature/sidebar', commit:'d4e5f6a', duration:'0.09s', markers:'55/57 present', missing:['Sidebar.tsx: import count dropped (8 to 6)','Sidebar.tsx: case \'tokens\' missing'] },
+  { type:'Regression', result:'pass', time:'Mar 23, 14:20', branch:'feature/sidebar', commit:'e7f8a9b', duration:'1.9 min', structural:'PASS (48/48 markers)', visual:'PASS (8 pages)', functional:'PASS (6 flows)' },
+  { type:'Pre-commit', result:'fail', time:'Mar 22, 18:45', branch:'feature/auth', commit:'blocked', duration:'28s', blocked:[{file:'auth.ts',marker:'validateSession'},{file:'auth.ts',marker:'refreshToken'},{file:'auth.ts',marker:'checkPermissions'}] },
+  { type:'Quality Gate', result:'pass', time:'Mar 22, 16:00', branch:'feature/auth', commit:'g2h3i4j', duration:'6.1 min', iterations:2, scores:SCORES[SCORES.length-3], issues:[] }
+];
+
+function showRunDetail(idx) {
+  var r = TIMELINE_RUNS[idx];
+  var html = '';
+  var badgeClass = r.result === 'pass' ? 'badge-perfect' : r.result === 'fail' ? 'badge-critical' : 'badge-warning';
+  var badgeText = r.result.toUpperCase();
+
+  // Header
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
+  html += '<span class="badge ' + badgeClass + '">' + badgeText + '</span>';
+  html += '<span style="font-size:14px;font-weight:600;">' + r.type + '</span>';
+  html += '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;">' + r.time + '</span>';
+  html += '</div>';
+
+  // Metadata grid
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">';
+  html += metaBlock('Branch', '<span style="font-family:var(--font-mono);font-size:12px;">' + r.branch + '</span>');
+  html += metaBlock('Duration', r.duration);
+  if (r.commit) html += metaBlock('Commit', '<span style="font-family:var(--font-mono);font-size:12px;">' + r.commit + '</span>');
+  if (r.iterations) html += metaBlock('Iterations', r.iterations);
+  if (r.markers) html += metaBlock('Markers', r.markers);
+  if (r.agents) html += metaBlock('Agents Planned', r.agents);
+  html += '</div>';
+
+  // Type-specific content
+  if (r.type === 'Quality Gate' && r.scores) {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:10px;">Agent Scores</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:16px;">';
+    AGENTS.forEach(function(name, i) {
+      var s = r.scores[i];
+      var pct = s * 10;
+      var barColor = s === 10 ? 'var(--score-perfect)' : s >= 8 ? 'var(--score-good)' : s >= 5 ? 'var(--score-warning)' : 'var(--score-critical)';
+      html += '<div style="display:flex;align-items:center;gap:8px;">';
+      html += '<span style="font-size:11px;color:var(--text-muted);width:90px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</span>';
+      html += '<div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;">';
+      html += '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;transition:width 0.4s ease;"></div>';
+      html += '</div>';
+      html += '<span style="font-size:11px;font-weight:600;width:24px;text-align:right;color:' + barColor + ';">' + s + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  if (r.type === 'Regression') {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Agent Results</div>';
+    html += resultRow('Structural', r.structural);
+    html += resultRow('Visual', r.visual);
+    html += resultRow('Functional', r.functional);
+  }
+
+  if (r.type === 'Pre-Flight' && r.conflicts) {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Conflict Analysis</div>';
+    r.conflicts.forEach(function(c) {
+      html += '<div style="font-size:12px;color:var(--text-secondary);padding:4px 0;"><span class="file">' + c.file + '</span> &mdash; ' + c.agents.join(' &amp; ') + '</div>';
+    });
+    html += '<div style="font-size:12px;color:var(--score-warning);margin-top:6px;font-weight:500;">Recommendation: ' + r.recommendation + '</div>';
+  }
+
+  if (r.type === 'Verify' && r.missing) {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Missing Markers</div>';
+    r.missing.forEach(function(m) {
+      html += '<div style="font-size:12px;color:var(--score-critical);padding:3px 0;">&bull; ' + m + '</div>';
+    });
+  }
+  if (r.type === 'Verify' && r.counts) {
+    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">Structural counts: ' + r.counts + '</div>';
+  }
+
+  if (r.blocked) {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px;">Blocked Markers</div>';
+    r.blocked.forEach(function(b) {
+      html += '<div style="font-size:12px;color:var(--score-critical);padding:3px 0;"><span class="file">' + b.file + '</span>: <code style="background:var(--bg-elevated);padding:1px 5px;border-radius:3px;font-size:11px;">' + b.marker + '</code></div>';
+    });
+  }
+
+  if (r.issues && r.issues.length > 0) {
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:12px 0 8px;">Issues Found (' + r.issues.length + ')</div>';
+    html += '<table style="width:100%;border-collapse:collapse;">';
+    html += '<thead><tr><th style="width:72px;font-size:10px;padding:6px 8px;border-bottom:1px solid var(--border-default);text-align:left;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Severity</th>';
+    html += '<th style="font-size:10px;padding:6px 8px;border-bottom:1px solid var(--border-default);text-align:left;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Description</th></tr></thead><tbody>';
+    r.issues.forEach(function(iss) {
+      var bc = iss.sev === 'HIGH' ? 'badge-warning' : iss.sev === 'CRITICAL' ? 'badge-critical' : iss.sev === 'LOW' ? 'badge-accent' : 'badge-good';
+      html += '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border-default);vertical-align:middle;">';
+      html += '<span class="badge ' + bc + '" style="min-width:56px;justify-content:center;">' + iss.sev + '</span></td>';
+      html += '<td style="padding:6px 8px;border-bottom:1px solid var(--border-default);font-size:12px;color:var(--text-secondary);">' + iss.desc + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  if (r.issues && r.issues.length === 0 && r.type === 'Quality Gate') {
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:12px;background:var(--score-perfect-alpha);border-radius:var(--radius-sm);"><span class="status-dot pass"></span><span style="color:var(--score-perfect);font-size:13px;font-weight:500;">All 13 agents scored 10/10 &mdash; no issues found.</span></div>';
+  }
+
+  document.getElementById('run-detail-content').textContent = '';
+  document.getElementById('run-detail-content').insertAdjacentHTML('beforeend', html);
+  document.getElementById('run-detail-chart-wrap').style.display = 'none';
+}
+
+function metaBlock(label, value) {
+  return '<div style="background:var(--bg-elevated);padding:10px 12px;border-radius:var(--radius-sm);">'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:2px;">' + label + '</div>'
+    + '<div style="font-size:16px;font-weight:700;">' + value + '</div></div>';
+}
+function resultRow(name, val) {
+  var isPASS = val.indexOf('PASS') === 0;
+  return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;">'
+    + '<span class="status-dot ' + (isPASS ? 'pass' : 'fail') + '"></span>'
+    + '<span style="font-weight:500;min-width:80px;">' + name + '</span>'
+    + '<span style="color:var(--text-secondary);">' + val + '</span></div>';
+}
+
+function initTimelineFilter() {
+  var bar = document.getElementById('timeline-filter-bar');
+  bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      bar.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var filter = btn.dataset.filter;
+      document.querySelectorAll('#timeline-list .timeline-item').forEach(function(item) {
+        if (filter === 'all' || item.dataset.type === filter) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    });
+  });
+  // Click timeline items to show detail
+  document.querySelectorAll('#timeline-list .timeline-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('#timeline-list .timeline-item').forEach(function(i) { i.classList.remove('active-run'); });
+      item.classList.add('active-run');
+      showRunDetail(parseInt(item.dataset.run));
+    });
+  });
+  // Show default run detail (run 4 = partial quality gate)
+  showRunDetail(4);
+}
+
+// ---- ISSUES FILTER ----
+function initIssuesFilter() {
+  var bar = document.getElementById('issues-filter-bar');
+  bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      bar.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var filter = btn.dataset.filter;
+      document.querySelectorAll('#issues-table-body tr').forEach(function(row) {
+        if (filter === 'all' || row.dataset.status === filter) {
+          row.classList.remove('hidden');
+        } else {
+          row.classList.add('hidden');
+        }
+      });
+    });
+  });
+}
+
+// ---- TAB NAVIGATION ----
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+// ---- BOOT ----
+window.addEventListener('DOMContentLoaded', function() {
+  initTabs();
+  initTimelineFilter();
+  initIssuesFilter();
+  animateCount();
+  renderAgents();
+  renderHeatmap();
+  // Small delay to ensure Chart.js is fully registered before drawing
+  setTimeout(function() {
+    initAllCharts();
+  }, 100);
+});
+</script>
+</body>
+</html>

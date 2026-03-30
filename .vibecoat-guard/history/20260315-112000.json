@@ -1,0 +1,91 @@
+{
+  "id": "20260315-112000",
+  "run": {
+    "type": "quality",
+    "trigger": "manual",
+    "timestamp": "2026-03-15T11:20:00.000Z",
+    "durationMs": 38500,
+    "result": "pass"
+  },
+  "git": {
+    "branch": "feature/sidebar-refactor",
+    "commitHash": "e5f6a7b8c9d0e1f2a3b4c5d6e7f8901234567890",
+    "author": "mike",
+    "changedFiles": [
+      "src/components/Sidebar.tsx",
+      "src/components/SidebarItem.tsx",
+      "src/components/SidebarGroup.tsx",
+      "src/hooks/useSidebar.ts",
+      "src/styles/sidebar.css"
+    ]
+  },
+  "summary": {
+    "regressionsBlocked": 1,
+    "issuesFound": 5,
+    "issuesFixed": 3,
+    "healthScore": 82
+  },
+  "verify": null,
+  "preFlight": null,
+  "regression": null,
+  "quality": {
+    "totalIterations": 4,
+    "maxIterations": 10,
+    "converged": true,
+    "finalScores": {
+      "accessibility": 8,
+      "responsiveness": 9,
+      "colorContrast": 8,
+      "typography": 9,
+      "spacing": 8,
+      "componentStructure": 9,
+      "stateManagement": 8,
+      "errorHandling": 7,
+      "performance": 8,
+      "codeQuality": 9,
+      "testCoverage": 7,
+      "documentation": 8,
+      "security": 9
+    },
+    "iterationHistory": [
+      {
+        "iteration": 1,
+        "scores": { "accessibility": 5, "responsiveness": 6, "colorContrast": 6, "typography": 7, "spacing": 5, "componentStructure": 7, "stateManagement": 6, "errorHandling": 5, "performance": 6, "codeQuality": 7, "testCoverage": 5, "documentation": 5, "security": 8 },
+        "issuesFound": 5,
+        "issuesFixed": 0,
+        "avgScore": 6.0
+      },
+      {
+        "iteration": 2,
+        "scores": { "accessibility": 6, "responsiveness": 7, "colorContrast": 7, "typography": 8, "spacing": 6, "componentStructure": 8, "stateManagement": 7, "errorHandling": 6, "performance": 7, "codeQuality": 8, "testCoverage": 6, "documentation": 6, "security": 8 },
+        "issuesFound": 5,
+        "issuesFixed": 1,
+        "avgScore": 6.92
+      },
+      {
+        "iteration": 3,
+        "scores": { "accessibility": 7, "responsiveness": 8, "colorContrast": 8, "typography": 8, "spacing": 7, "componentStructure": 9, "stateManagement": 8, "errorHandling": 7, "performance": 8, "codeQuality": 8, "testCoverage": 7, "documentation": 7, "security": 9 },
+        "issuesFound": 3,
+        "issuesFixed": 2,
+        "avgScore": 7.77
+      },
+      {
+        "iteration": 4,
+        "scores": { "accessibility": 8, "responsiveness": 9, "colorContrast": 8, "typography": 9, "spacing": 8, "componentStructure": 9, "stateManagement": 8, "errorHandling": 7, "performance": 8, "codeQuality": 9, "testCoverage": 7, "documentation": 8, "security": 9 },
+        "issuesFound": 2,
+        "issuesFixed": 0,
+        "avgScore": 8.23
+      }
+    ],
+    "issues": [
+      { "id": "QI-008", "severity": "medium", "category": "errorHandling", "description": "SidebarGroup collapse animation throws when group has zero children", "file": "src/components/SidebarGroup.tsx", "line": 34, "status": "open" },
+      { "id": "QI-009", "severity": "low", "category": "testCoverage", "description": "SidebarItem click handler not covered by tests", "file": "src/components/SidebarItem.tsx", "line": 22, "status": "open" }
+    ],
+    "resolvedIssues": [
+      { "id": "QI-010", "severity": "high", "category": "accessibility", "description": "Sidebar navigation missing role='navigation' landmark", "file": "src/components/Sidebar.tsx", "line": 15, "fixedInIteration": 2 },
+      { "id": "QI-011", "severity": "medium", "category": "spacing", "description": "Inconsistent padding between sidebar items and groups", "file": "src/styles/sidebar.css", "line": 28, "fixedInIteration": 3 },
+      { "id": "QI-012", "severity": "high", "category": "responsiveness", "description": "Sidebar does not collapse on mobile breakpoint, overlaps main content", "file": "src/components/Sidebar.tsx", "line": 42, "fixedInIteration": 3 }
+    ]
+  },
+  "preCommitHook": null
+}
